@@ -1,0 +1,3 @@
+--reporter dot
+--require test/support/setup
+--compilers coffee:coffee-script

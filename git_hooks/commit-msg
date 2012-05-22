@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+var fs = require("fs");
+
+var fileContents = fs.readFileSync(process.argv[2]).toString();
+
+var lines = fileContents.split("\n");
+
+if (lines[0].length > 65) {
+    console.error("First line of commit message should be at most 50 characters in length.");
+    process.exit(1);
+}

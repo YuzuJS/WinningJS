@@ -1,0 +1,40 @@
+{
+    "name": "WinningJS",
+    "description": "A set of modules for Windows 8 development, built on top of WinJS.",
+    "private": true,
+    "version": "0.0.0",
+    "author": "NobleJS",
+    "contributors": [
+        "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NobleJS/WinningJS"
+    },
+    "bugs": {
+        "url": "http://github.com/NobleJS/WinningJS/issues"
+    },
+    "directories": {
+        "lib": "./lib"
+    },
+    "scripts": {
+        "test": "mocha",
+        "lint": "jshint lib --show-non-errors"
+    },
+    "dependencies": {
+        "pubit": "*"
+    },
+    "devDependencies": {
+        "mocha": ">= 1.0.3",
+        "chai": ">= 1.0.1",
+        "sinon": ">= 1.3.3",
+        "sinon-chai": ">= 2.0.1",
+        "sandboxed-module": ">= 0.1.3",
+        "jshint": "*",
+        "npm": "*",
+        "coffee-script": ">= 1.3.3"
+    },
+    "engines": {
+        "node": "*"
+    }
+}
