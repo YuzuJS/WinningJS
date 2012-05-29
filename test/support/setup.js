@@ -5,3 +5,4 @@ chai.use(sinonChai);
 chai.should();
 
 global.sinon = require("sinon");
+global.expect = chai.expect;
