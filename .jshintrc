@@ -1,0 +1,22 @@
+{
+    "curly": true,
+    "eqeqeq": true,
+    "immed": true,
+    "latedef": true,
+    "newcap": true,
+    "noarg": true,
+    "nonew": true,
+    "trailing": true,
+    "undef": true,
+    "white": true,
+    "es5": true,
+    "esnext": true,
+    "globalstrict": true,
+    "node": true,
+    "browser": true,
+    "indent": 4,
+    "predef": [
+        "WinJS",
+        "Windows"
+    ]
+}
