@@ -59,7 +59,7 @@ describe "Create UI component", ->
             it "should render them", ->
                 subComponent = createUIComponent(template: -> "<p>text</p>")
                 component = createUIComponent(
-                    template: -> "<section><div class='class'></div><region name='sub'></region></section>"
+                    template: -> "<section><div class='class'></div><div data-region='sub'></div></section>"
                     components:
                         sub: subComponent
                 )
