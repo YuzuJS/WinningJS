@@ -4,6 +4,7 @@ jsdom = require("jsdom").jsdom
 
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 $ = require("jQuery").create(window)
+Q = require("q");
 WinJS = { UI: {} }
 
 { create: createUIComponent, mixin: mixinUIComponent } = do ->
@@ -19,7 +20,7 @@ WinJS = { UI: {} }
 
 describe "Create UI component", ->
     beforeEach ->
-        WinJS.UI.processAll = sinon.spy()
+        WinJS.UI.processAll = sinon.stub().returns(Q.resolve());
 
     it "should result in the object having a `render` method", ->
         component = createUIComponent()

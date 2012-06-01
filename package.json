@@ -22,7 +22,8 @@
         "lint": "jshint lib --show-non-errors"
     },
     "dependencies": {
-        "pubit": "*"
+        "pubit": "*",
+        "q": ">= 0.8.5"
     },
     "devDependencies": {
         "mocha": ">= 1.0.3",
