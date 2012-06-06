@@ -16,7 +16,7 @@ requireApp = (winJS = {}) ->
 describe "app", ->
     it "should call `WinJS.Application.start()`", ->
         stubWinJS = Application: start: sinon.spy()
-        requireApp(stubWinJS)
+        requireApp(stubWinJS).start()
 
         stubWinJS.Application.start.should.have.been.calledOnce
 
@@ -27,6 +27,7 @@ describe "app", ->
         it "should call `WinJS.UI.processAll()`", ->
             stubWinJS = UI: processAll: sinon.spy()
             app = requireApp(stubWinJS)
+            app.start()
 
             stubWinJS.Application.onactivated(@eventObject)
 
@@ -39,6 +40,7 @@ describe "app", ->
             it "should publish a 'launch' event", ->
                 stubWinJS = {}
                 app = requireApp(stubWinJS)
+                app.start()
 
                 spy = sinon.spy()
                 app.on("launch", spy)
@@ -55,6 +57,7 @@ describe "app", ->
             it "should publish a 'reactivate' event", ->
                 stubWinJS = {}
                 app = requireApp(stubWinJS)
+                app.start()
 
                 spy = sinon.spy()
                 app.on("reactivate", spy)
@@ -67,6 +70,7 @@ describe "app", ->
         it "should publish a 'beforeSuspend' event", ->
             stubWinJS = {}
             app = requireApp(stubWinJS)
+            app.start()
 
             spy = sinon.spy()
             app.on("beforeSuspend", spy)
