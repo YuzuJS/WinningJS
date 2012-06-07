@@ -8,8 +8,9 @@ Windows =
         ApplicationExecutionState: terminated: {}
 
 requireApp = (winJS = {}) ->
-    winJS.Application ?= { start: -> }
-    winJS.UI ?= { processAll: -> }
+    winJS.Application ?= start: ->
+    winJS.UI ?= processAll: ->
+    winJS.UI._ElementsPool = prototype: {}
 
     sandboxedModule.require("../lib/app", globals: { WinJS: winJS, Windows: Windows })
 
