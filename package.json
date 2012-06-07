@@ -5,7 +5,9 @@
     "version": "0.0.0",
     "author": "NobleJS",
     "contributors": [
-        "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)"
+        "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)",
+        "Paul Bouzakis <github@paulbouzakis.com> (http://paulbouzakis.com/)",
+        "Joseph Khoury"
     ],
     "repository": {
         "type": "git",
@@ -22,7 +24,7 @@
         "lint": "jshint lib --show-non-errors"
     },
     "dependencies": {
-        "pubit": "*",
+        "pubit": ">= 1.2.0",
         "q": ">= 0.8.5"
     },
     "devDependencies": {
@@ -32,14 +34,11 @@
         "sinon": ">= 1.3.3",
         "sinon-chai": ">= 2.0.1",
         "sandboxed-module": ">= 0.1.3",
-        "jsdom": "git://github.com/domenic/jsdom.git#name",
+        "jsdom": ">= 0.2.14",
         "jquery": ">= 1.7.2",
         "jshint": "*",
         "npm": "*",
         "coffee-script": ">= 1.3.3"
-    },
-    "_dependencyComments": {
-        "jsdom": "needs fix for 'name' attribute, which we use for <region>s"
     },
     "engines": {
         "node": "*"
