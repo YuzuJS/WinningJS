@@ -4,8 +4,8 @@ jsdom = require("jsdom").jsdom
 
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 $ = require("jQuery").create(window)
-Q = require("q");
-WinJS = { UI: {} }
+Q = require("q")
+WinJS =  UI: {}, Binding: {} 
 
 Presenter = do ->
     sandboxedModule = require("sandboxed-module")
@@ -21,7 +21,8 @@ describe "Create UI presenter", ->
     present = null
 
     beforeEach ->
-        WinJS.UI.process = sinon.stub().returns(Q.resolve());
+        WinJS.UI.processAll = sinon.stub().returns(Q.resolve());
+        WinJS.Binding.processAll = sinon.stub().returns(Q.resolve());
 
     it "should result in the object having a `process` method", ->
         presenter = new Presenter
@@ -45,7 +46,7 @@ describe "Create UI presenter", ->
             presenter = new Presenter(template: -> "<p>Hi</p>")
 
             presenter.process().then((element) ->
-                WinJS.UI.process.should.have.been.calledWith(element)
+                WinJS.UI.processAll.should.have.been.calledWith(element)
             ).should.notify(done)
 
         describe "when the template returns zero elements", ->
@@ -56,6 +57,18 @@ describe "Create UI presenter", ->
             it "should fail with an informative error", ->
                 expect(-> new Presenter(template: -> "<header></header><section></section>"))
                     .to.throw("Expected the template to render exactly one element.")
+
+        describe "with dataContext", ->
+            it "should call `WinJS.Binding.processAll` on the root element and dataContext", (done) ->
+                dataContext = name: "My Name"
+                presenter = new Presenter(
+                    template: -> "<div><p data-win-bind=\"textContext: name \"></p></div>"
+                    dataContext: dataContext
+                )
+
+                presenter.process().then((element) ->
+                    WinJS.Binding.processAll.should.have.been.calledWith(element, dataContext)
+                ).should.notify(done)
 
         describe "with renderables (both async and sync)", ->
             it "should render them", (done) ->
