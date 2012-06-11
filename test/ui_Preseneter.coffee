@@ -25,11 +25,11 @@ describe "Create UI presenter", ->
         WinJS.Binding.processAll = sinon.stub().returns(Q.resolve());
 
     it "should result in the object having a `process` method", ->
-        presenter = new Presenter
+        presenter = new Presenter(template: -> "<div></div>")
         expect(presenter).to.respondTo("process")
 
     it "should result in the object having an `element` property", ->
-        presenter = new Presenter
+        presenter = new Presenter(template: -> "<div></div>")
         expect(presenter).to.have.property("element")
 
     describe "process", ->
