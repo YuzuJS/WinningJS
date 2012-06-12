@@ -22,11 +22,9 @@ Presenter = do ->
     sandboxedModule.require("../lib/ui/Presenter", globals: globals, requires: requires)
 
 describe "Create UI presenter", ->
-    present = null
-
     beforeEach ->
-        WinJS.UI.processAll = sinon.stub().returns(Q.resolve());
-        WinJS.Binding.processAll = sinon.stub().returns(Q.resolve());
+        WinJS.UI.processAll = sinon.stub().returns(Q.resolve())
+        WinJS.Binding.processAll = sinon.stub().returns(Q.resolve())
 
     it "should result in the object having a `process` method", ->
         presenter = new Presenter(template: -> "<div></div>")
@@ -116,4 +114,3 @@ describe "Create UI presenter", ->
             ).should.notify(done)
 
             presenter.process()
-
