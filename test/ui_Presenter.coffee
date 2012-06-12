@@ -5,7 +5,9 @@ jsdom = require("jsdom").jsdom
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 $ = require("jQuery").create(window)
 Q = require("q")
+
 WinJS =  UI: {}, Binding: {} 
+ko = applyBindings: sinon.spy()
 
 Presenter = do ->
     sandboxedModule = require("sandboxed-module")
@@ -14,8 +16,10 @@ Presenter = do ->
         window: window
         document: window.document
         WinJS: WinJS
+    requires =
+        knockoutify: ko
     
-    sandboxedModule.require("../lib/ui/Presenter", globals: globals)
+    sandboxedModule.require("../lib/ui/Presenter", globals: globals, requires: requires)
 
 describe "Create UI presenter", ->
     present = null
@@ -64,16 +68,16 @@ describe "Create UI presenter", ->
                 expect(-> new Presenter(template: -> "<header></header><section></section>"))
                     .to.throw("Expected the template to render exactly one element.")
 
-        describe "with dataContext", ->
-            it "should call `WinJS.Binding.processAll` on the root element and dataContext", (done) ->
-                dataContext = name: "My Name"
+        describe "with viewModel", ->
+            it "should apply Knockout bindings", (done) ->
+                viewModel = name: "My name"
                 presenter = new Presenter(
-                    template: -> "<div><p data-win-bind=\"textContext: name \"></p></div>"
-                    dataContext: dataContext
+                    template: -> """<div><p data-bind="text: name"></p></div>"""
+                    viewModel: viewModel
                 )
 
                 presenter.process().then((element) ->
-                    WinJS.Binding.processAll.should.have.been.calledWith(element, dataContext)
+                    ko.applyBindings.should.have.been.calledWith(viewModel, element)
                 ).should.notify(done)
 
         describe "with renderables (both async and sync)", ->
