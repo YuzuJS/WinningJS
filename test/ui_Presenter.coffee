@@ -85,7 +85,7 @@ describe "Create UI presenter", ->
 
 
                 presenter = new Presenter(
-                    template: -> "<section><div class='class'></div><div data-region='foo'></div><div data-region='bar'></div></section>"
+                    template: -> "<section><div class='class'></div><div data-winning-region='foo'></div><div data-winning-region='bar'></div></section>"
                     renderables:
                         foo: renderableAsync
                         bar: renderableSync
