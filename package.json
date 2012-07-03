@@ -26,7 +26,8 @@
     "dependencies": {
         "pubit": ">= 1.2.0",
         "q": ">= 0.8.5",
-        "knockoutify": "git://github.com/domenic/knockoutify.git"
+        "knockoutify": "git://github.com/domenic/knockoutify.git",
+        "jquery-browserify": ">= 1.7.2"
     },
     "devDependencies": {
         "mocha": ">= 1.0.3",
