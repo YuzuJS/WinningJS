@@ -11,6 +11,8 @@ resources = do ->
 
     sandboxedModule.require("../lib/resources", globals: globals)
 
+s = resources.s
+
 describe "resources", ->
 
     beforeEach ->
@@ -20,6 +22,7 @@ describe "resources", ->
         getStringStub.withArgs("string3").returns(value: "STRING 3 AND {^string1}")
         getStringStub.withArgs("string4").returns(value: "STRING 4 AND {^string2} AND {^string1}")
         getStringStub.withArgs("string5").returns(value: "{^string4} AND {^string3}")
+        getStringStub.withArgs("string12").returns(value: "string12", empty: true)
 
         WinJS.Resources = getString: getStringStub
         resources.augmentGetString()
@@ -42,11 +45,12 @@ describe "resources", ->
     describe "s", ->
         
         it "should work like WinningJS augmented WinJS.Resources.getString", ->
-            s = resources.s
             s("string4").should.equal("STRING 4 AND STRING 2 AND STRING 1")
             s("string1").should.equal("STRING 1")
 
         it "should throw an error if key is not a valid string", ->
-            s = resources.s
-            (-> s()).should.throw("Resource key must be a valid string")
-            (-> s({})).should.throw("Resource key must be a valid string")
+            (-> s()).should.throw("Resource key must be a valid string.")
+            (-> s({})).should.throw("Resource key must be a valid string.")
+
+        it "should throw an error if resource was not found", ->
+            (-> s("string12")).should.throw("Resource with key 'string12' not found.")
