@@ -158,3 +158,16 @@ describe "Create UI presenter", ->
             ).should.notify(done)
 
             presenter.process()
+
+    describe "use", ->
+        it "should call process on the plugin object passing in the root element", (done) ->
+            myPlugin = process: sinon.stub().returns(Q.resolve())
+            presenter = new Presenter(template: -> "<section></section>")
+
+            presenter.use(myPlugin)
+
+            presenter.element.then((element) ->
+                myPlugin.process.should.have.been.calledWith(element)
+            ).should.notify(done)
+
+            presenter.process()
