@@ -1,13 +1,13 @@
 "use strict"
 
 jsdom = require("jsdom").jsdom
+Q = require("q")
+sandboxedModule = require("sandboxed-module")
+makeEmitter = require("pubit").makeEmitter
 
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 document = window.document
-$ = require("jQuery").create(window)
-Q = require("q")
-makeEmitter = require("pubit").makeEmitter
-
+$ = sandboxedModule.require("jquery-browserify", globals: { window })
 
 # Using jQuery `click` method on the element does not work (does not emit the click event).
 # TODO: Either make this a util (currently used by Navigator test), or find out why jQuery is not working.
@@ -17,10 +17,8 @@ triggerClickFor = (el) ->
     el.dispatchEvent(ev)
 
     return ev
-    
-FlyoutPlugin = do ->
-    sandboxedModule = require("sandboxed-module")
 
+FlyoutPlugin = do ->
     globals =
         window: window
         document: window.document
@@ -32,11 +30,11 @@ createFlyout = (title) ->
     flyout = {}
     publish = makeEmitter(flyout, ["show", "hide"])
 
-    flyout.show = sinon.spy(-> 
+    flyout.show = sinon.spy(->
         publish("show", flyout)
         Q.resolve()
     )
-    flyout.hide = sinon.spy(-> 
+    flyout.hide = sinon.spy(->
         publish("hide", flyout)
         Q.resolve()
     )
@@ -105,7 +103,7 @@ describe "Using the Flyout presenter plugin", ->
 
                 button = element.querySelector("button[data-winning-flyout]")
                 triggerClickFor(button)
-                
+
                 flyout.on("show", ->
                     flyout.hide()
                     document.body.querySelectorAll(".flyout").length.should.equal(0)

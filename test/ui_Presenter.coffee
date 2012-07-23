@@ -1,17 +1,16 @@
 "use strict";
 
 jsdom = require("jsdom").jsdom
-
-window = jsdom(null, null, features: QuerySelector: true).createWindow()
-$ = require("jQuery").create(window)
+sandboxedModule = require("sandboxed-module")
 Q = require("q")
 
-WinJS =  UI: {}, Binding: {}
+window = jsdom(null, null, features: QuerySelector: true).createWindow()
+$ = sandboxedModule.require("jquery-browserify", globals: { window })
+
+WinJS = UI: {}, Binding: {}
 ko = {}
 
 Presenter = do ->
-    sandboxedModule = require("sandboxed-module")
-
     globals =
         window: window
         document: window.document
@@ -128,7 +127,7 @@ describe "Create UI presenter", ->
                     ko.applyBindings = sinon.spy (viewModel, element) ->
                         if (element.querySelector("strong.sub[data-bind]"))
                             throw new Error("Unable to parse bindings.")
-                
+
                 it "should apply bindings to the renderable's element only", (done) ->
                     viewModel = title: "Composite Component"
                     presenter = new Presenter(

@@ -3,7 +3,6 @@
 jsdom = require("jsdom").jsdom
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 document = window.document
-$ = require("jQuery").create(window)
 Q = require("q")
 
 components = do ->
@@ -32,11 +31,11 @@ describe "UI components utility", ->
         anchorEl = null
 
         beforeEach -> anchorEl = document.createElement("a")
-        afterEach -> $(document.body).empty()
+        afterEach -> document.body.innerHTML = ""
 
         it "should implement the flyout component api and listen to winControl events", (done) ->
             component = new FlyoutComponent(anchor: anchorEl)
-            
+
             expect(component).to.respondTo("show")
             expect(component).to.respondTo("hide")
             expect(component).to.have.ownProperty("anchor")
