@@ -28,8 +28,8 @@ createFlyoutConstructor = components.createFlyoutConstructor
 
 describe "UI components utility", ->
     describe "creating a flyout component", ->
+        FlyoutComponent = createFlyoutConstructor(template: -> "<div>My Flyout</div>")
         anchorEl = null
-        FlyoutComponent = createFlyoutConstructor(-> "<div>My Flyout</div>")
 
         beforeEach -> anchorEl = document.createElement("a")
 
