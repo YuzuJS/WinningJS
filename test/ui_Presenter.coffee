@@ -157,4 +157,17 @@ describe "Create UI presenter", ->
                 $(element).find("p").text().should.equal("text")
             ).should.notify(done)
 
-            presenter.process()
+            presenter.process() # Invoke process to fulfill `presenter.element` promise.
+
+    describe "use", ->
+        it "should call process on the plugin object passing in the root element", (done) ->
+            myPlugin = process: sinon.stub().returns(Q.resolve())
+            presenter = new Presenter(template: -> "<section></section>")
+
+            presenter.use(myPlugin)
+
+            presenter.element.then((element) ->
+                myPlugin.process.should.have.been.calledWith(element)
+            ).should.notify(done)
+
+            presenter.process() # Invoke process to fulfill `presenter.element` promise.
