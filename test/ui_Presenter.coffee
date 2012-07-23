@@ -157,7 +157,7 @@ describe "Create UI presenter", ->
                 $(element).find("p").text().should.equal("text")
             ).should.notify(done)
 
-            presenter.process()
+            presenter.process() # Invoke process to fulfill `presenter.element` promise.
 
     describe "use", ->
         it "should call process on the plugin object passing in the root element", (done) ->
@@ -170,4 +170,4 @@ describe "Create UI presenter", ->
                 myPlugin.process.should.have.been.calledWith(element)
             ).should.notify(done)
 
-            presenter.process()
+            presenter.process() # Invoke process to fulfill `presenter.element` promise.
