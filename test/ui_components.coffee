@@ -32,7 +32,6 @@ describe "UI components utility", ->
         anchorEl = null
 
         beforeEach -> anchorEl = document.createElement("a")
-
         afterEach -> $(document.body).empty()
 
         it "should implement the flyout component api and listen to winControl events", (done) ->
@@ -81,10 +80,27 @@ describe "UI components utility", ->
             it "should proxy to win control", (done) ->
                 component = new FlyoutComponent(anchor: anchorEl)
 
-                expect(component.render().then((componentRootEl) ->
-                    component.show()
-                    expect(componentRootEl.winControl.show).to.have.beenCalled
-                )).to.notify(done)
+                expect(component.render()
+                    .then((componentRootEl) ->
+                        component.show()
+                        return componentRootEl
+                    )
+                    .then((componentRootEl) ->
+                        expect(componentRootEl.winControl.show).to.have.been.called
+                    )
+                ).to.notify(done)
+
+            it "should proxy to win control passing in any arguments", (done) ->
+                component = new FlyoutComponent()
+                expect(component.render()
+                    .then((componentRootEl) ->
+                        component.show(anchorEl)
+                        return componentRootEl
+                    )
+                    .then((componentRootEl) ->
+                        expect(componentRootEl.winControl.show).to.have.been.calledWith(anchorEl)
+                    )
+                ).to.notify(done)
 
             it "should be rejected if no anchor has been set", (done) ->
                 component = new FlyoutComponent()
