@@ -7,7 +7,7 @@ Q = require("q")
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 $ = sandboxedModule.require("jquery-browserify", globals: { window })
 
-WinJS = UI: {}, Binding: {}
+WinJS = UI: {}, Resources: {}
 ko = {}
 
 Presenter = do ->
@@ -24,7 +24,7 @@ Presenter = do ->
 describe "Create UI presenter", ->
     beforeEach ->
         WinJS.UI.processAll = sinon.stub().returns(Q.resolve())
-        WinJS.Binding.processAll = sinon.stub().returns(Q.resolve())
+        WinJS.Resources.processAll = sinon.stub().returns(Q.resolve())
         ko.applyBindings = sinon.spy()
 
     it "should result in the object having a `process` method", ->
@@ -55,6 +55,12 @@ describe "Create UI presenter", ->
 
             presenter.process().then (element) ->
                 WinJS.UI.processAll.should.have.been.calledWith(element)
+
+        it "should call `WinJS.Resources.processAll` on the resulting element", ->
+            presenter = new Presenter(template: -> "<p>Hi</p>")
+
+            presenter.process().then (element) ->
+                WinJS.Resources.processAll.should.have.been.calledWith(element)
 
         describe "when the template returns zero elements", ->
             it "should fail with an informative error", ->
