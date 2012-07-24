@@ -23,6 +23,7 @@ describe "resources", ->
         getStringStub.withArgs("string4").returns(value: "STRING 4 AND {^string2} AND {^string1}")
         getStringStub.withArgs("string5").returns(value: "{^string4} AND {^string3}")
         getStringStub.withArgs("string12").returns(value: "string12", empty: true)
+        getStringStub.withArgs("string6").returns(value: "{^string12}")
 
         WinJS.Resources = getString: getStringStub
         resources.augmentGetString()
@@ -54,3 +55,4 @@ describe "resources", ->
 
         it "should throw an error if resource was not found", ->
             (-> s("string12")).should.throw("Resource with key 'string12' not found.")
+            (-> s("string6")).should.throw("Resource with key 'string12' not found.")
