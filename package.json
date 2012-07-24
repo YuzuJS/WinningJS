@@ -36,6 +36,7 @@
         "jsdom": ">= 0.2.15",
         "jshint": ">= 0.7.1",
         "mocha": ">= 1.3.0",
+        "mocha-as-promised": ">= 1.1.0",
         "npm": "*",
         "sandboxed-module": ">= 0.1.3",
         "sinon": ">= 1.4.2",
