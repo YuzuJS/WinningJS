@@ -17,6 +17,7 @@ components = do ->
                 hide: sinon.stub(),
                 addEventListener: sinon.stub()
 
+            @use = (plugin) -> plugin.process(componentRootEl)
             @process = sinon.stub().returns(Q.resolve(componentRootEl))
             @winControl = Q.resolve(componentRootEl.winControl)
 
@@ -106,3 +107,15 @@ describe "UI components utility", ->
                 component.render().then (componentRootEl) ->
                     component.hide()
                     expect(componentRootEl.winControl.hide).to.have.beenCalled
+
+        describe "with plugins set", ->
+            fooPlugin = process: sinon.stub()
+            barPlugin = process: sinon.stub()
+
+            it "should invoke `process` for each plugin", ->
+                plugins = [fooPlugin, barPlugin]
+                component = new FlyoutComponent(plugins: plugins)
+
+                component.render().then (componentRootEl) ->
+                    for plugin in plugins
+                        plugin.process.should.have.been.calledWith(componentRootEl)
