@@ -1,26 +1,23 @@
 "use strict"
 
-jsdom = require("jsdom").jsdom
-window = jsdom(null, null, features: QuerySelector: true).createWindow()
-$ = require("jQuery").create(window)
 makeEmitter = require("pubit").makeEmitter
-ko = null
 
-koUtils = do ->
+{ $, ko, koUtils } = do ->
+    jsdom = require("jsdom").jsdom
     sandboxedModule = require("sandboxed-module")
 
+    window = jsdom(null, null, features: QuerySelector: true).createWindow()
     globals =
         window: window
         document: window.document
         navigator: window.navigator
-        Error: Error # necessary for `instanceof Error` checks :-/        
+        Error: Error # necessary for `instanceof Error` checks :-/
 
-    ko = sandboxedModule.require("knockoutify", globals: globals) # ko relies on global window
+    $ = sandboxedModule.require("jquery-browserify", globals: globals)
+    ko = sandboxedModule.require("knockoutify", globals: globals)
+    koUtils = sandboxedModule.require("../lib/ui/util/knockout", globals: globals, requires: knockoutify: ko)
 
-    requires = 
-         knockoutify: ko
-
-    sandboxedModule.require("../lib/ui/util/knockout", globals: globals, requires: requires)
+    return { $, ko, koUtils }
 
 describe "Using the knockout util", ->
 
@@ -51,10 +48,10 @@ describe "Using the knockout util", ->
                 publish = makeEmitter(obj, events: ["propChange"])
                 observable = koUtils.observableFromChangingProperty(obj, "prop")
 
-            it "should create an observable with the correct initial value", ->			
+            it "should create an observable with the correct initial value", ->
                 observable().should.equal("hello")
 
-            it "should update the property when updating the observable", ->	
+            it "should update the property when updating the observable", ->
                 observable("hi there")
                 obj.prop.should.equal("hi there")
 
@@ -62,10 +59,10 @@ describe "Using the knockout util", ->
                 publish("propChange", "hi there")
                 observable().should.equal("hi there")
 
-    describe "addBindings", ->        
+    describe "addBindings", ->
         describe "when the custom binding `itemInvoked` is present in the markup", ->
             el = null
-            viewModel = 
+            viewModel =
                 onItemInvoked: sinon.stub()
 
             beforeEach ->

@@ -1,7 +1,6 @@
 {
     "name": "WinningJS",
     "description": "A set of modules for Windows 8 development, built on top of WinJS.",
-    "private": true,
     "version": "0.0.0",
     "author": "NobleJS",
     "contributors": [
@@ -11,7 +10,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/NobleJS/WinningJS"
+        "url": "https://github.com/NobleJS/WinningJS.git"
     },
     "bugs": {
         "url": "http://github.com/NobleJS/WinningJS/issues"
@@ -24,26 +23,26 @@
         "lint": "jshint lib --show-non-errors"
     },
     "dependencies": {
-        "underscore": ">= 1.3.3",
-        "pubit": ">= 1.2.0",
+        "jquery-browserify": ">= 1.7.2",
+        "knockoutify": "git://github.com/guillaume86/knockoutify.git",
+        "pubit": ">= 1.2.1",
         "q": ">= 0.8.5",
-        "knockoutify": ">= 2.1.0",
-        "jquery-browserify": ">= 1.7.2"
+        "underscore": ">= 1.3.3"
     },
     "devDependencies": {
-        "mocha": ">= 1.0.3",
-        "chai": ">= 1.0.1",
-        "chai-as-promised": ">= 3.2.0",
-        "sinon": ">= 1.3.3",
-        "sinon-chai": ">= 2.0.1",
-        "sandboxed-module": ">= 0.1.3",
-        "jsdom": ">= 0.2.14",
-        "jquery": ">= 1.7.2",
-        "jshint": "*",
+        "chai": ">= 1.1.1",
+        "chai-as-promised": ">= 3.2.1",
+        "coffee-script": ">= 1.3.3",
+        "jsdom": ">= 0.2.15",
+        "jshint": ">= 0.7.1",
+        "mocha": ">= 1.3.0",
+        "mocha-as-promised": ">= 1.1.0",
         "npm": "*",
-        "coffee-script": ">= 1.3.3"
+        "sandboxed-module": ">= 0.1.3",
+        "sinon": ">= 1.4.2",
+        "sinon-chai": ">= 2.1.2"
     },
-    "engines": {
-        "node": "*"
+    "_dependencyComments": {
+        "knockoutify": "Need version 2.1.0; the npm version is 2.0.0."
     }
 }

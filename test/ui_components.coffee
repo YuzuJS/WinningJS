@@ -3,7 +3,6 @@
 jsdom = require("jsdom").jsdom
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 document = window.document
-$ = require("jQuery").create(window)
 Q = require("q")
 
 components = do ->
@@ -32,88 +31,78 @@ describe "UI components utility", ->
         anchorEl = null
 
         beforeEach -> anchorEl = document.createElement("a")
-        afterEach -> $(document.body).empty()
+        afterEach -> document.body.innerHTML = ""
 
-        it "should implement the flyout component api and listen to winControl events", (done) ->
+        it "should implement the flyout component api and listen to winControl events", ->
             component = new FlyoutComponent(anchor: anchorEl)
-            
+
             expect(component).to.respondTo("show")
             expect(component).to.respondTo("hide")
             expect(component).to.have.ownProperty("anchor")
 
-            expect(component.render().then((componentRootEl) ->
+            component.render().then (componentRootEl) ->
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("aftershow")
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("afterhide")
-            )).to.notify(done)
 
         describe "on the corresponding flyout win control", ->
-            it "should set the anchor if option is set", (done) ->
+            it "should set the anchor if option is set", ->
                 component = new FlyoutComponent(anchor: anchorEl)
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     expect(componentRootEl.winControl.anchor).to.equal(anchorEl)
-                )).to.notify(done)
 
-            it "should set the anchor when the anchor property is set", (done) ->
+            it "should set the anchor when the anchor property is set", ->
                 component = new FlyoutComponent()
                 component.anchor = anchorEl
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     expect(componentRootEl.winControl.anchor).to.equal(anchorEl)
-                )).to.notify(done)
 
-            it "should set the placement if option is set", (done) ->
+            it "should set the placement if option is set", ->
                 component = new FlyoutComponent(placement: "top")
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     expect(componentRootEl.winControl.placement).to.equal("top")
-                )).to.notify(done)
 
-            it "should set the alignment if option is set", (done) ->
+            it "should set the alignment if option is set", ->
                 component = new FlyoutComponent(alignment: "left")
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     expect(componentRootEl.winControl.alignment).to.equal("left")
-                )).to.notify(done)
 
         describe "when show is invoked", ->
-            it "should proxy to win control", (done) ->
+            it "should proxy to win control", ->
                 component = new FlyoutComponent(anchor: anchorEl)
 
-                expect(component.render()
+                component.render()
                     .then((componentRootEl) ->
                         component.show()
                         return componentRootEl
                     )
-                    .then((componentRootEl) ->
+                    .then (componentRootEl) ->
                         expect(componentRootEl.winControl.show).to.have.been.called
-                    )
-                ).to.notify(done)
 
-            it "should proxy to win control passing in any arguments", (done) ->
+            it "should proxy to win control passing in any arguments", ->
                 component = new FlyoutComponent()
-                expect(component.render()
+
+                component.render()
                     .then((componentRootEl) ->
                         component.show(anchorEl)
                         return componentRootEl
                     )
-                    .then((componentRootEl) ->
+                    .then (componentRootEl) ->
                         expect(componentRootEl.winControl.show).to.have.been.calledWith(anchorEl)
-                    )
-                ).to.notify(done)
 
-            it "should be rejected if no anchor has been set", (done) ->
+            it "should be rejected if no anchor has been set", ->
                 component = new FlyoutComponent()
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     expect(component.show()).to.be.rejected.with(Error)
-                )).to.notify(done)
 
         describe "when hide is invoked", ->
-            it "should proxy to win control", (done) ->
+            it "should proxy to win control", ->
                 component = new FlyoutComponent()
 
-                expect(component.render().then((componentRootEl) ->
+                component.render().then (componentRootEl) ->
                     component.hide()
                     expect(componentRootEl.winControl.hide).to.have.beenCalled
-                )).to.notify(done)

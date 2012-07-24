@@ -1,7 +1,7 @@
 "use strict"
 
 jsdom = require("jsdom").jsdom
-Navigator = require("../lib/ui/Navigator")
+sandboxedModule = require("sandboxed-module")
 
 describe "Navigator", ->
     window = null
@@ -21,7 +21,7 @@ describe "Navigator", ->
 
     beforeEach ->
         window = jsdom(null, null, features: QuerySelector: true).createWindow()
-        $ = require("jQuery").create(window)
+        $ = sandboxedModule.require("jquery-browserify", globals: { window })
         $body = $(window.document.body)
 
         @eventObject = detail: location: ""
@@ -31,10 +31,10 @@ describe "Navigator", ->
             addEventListener: (eventName, newListener) => @nav._listener = newListener
             navigate: sinon.spy(=> @nav._listener(@eventObject))
 
+        Navigator = sandboxedModule.require("../lib/ui/Navigator", requires: "jquery-browserify": $)
         @navigator = new Navigator(@nav, window.document.body)
 
-    afterEach ->
-        $(window.document.body).empty()
+    afterEach -> $body.empty()
 
     describe "navigate to a new page", ->
         beforeEach ->
@@ -57,7 +57,7 @@ describe "Navigator", ->
 
             $body.children("section[data-winning-page='about']").is(":visible").should.equal(true)
             $body.children("section[data-winning-page='testhome']").is(":visible").should.equal(false)
-            
+
 
     describe "listen to clicks", ->
         beforeEach ->
@@ -86,6 +86,6 @@ describe "Navigator", ->
 
         it "should not do anything if href is empty", ->
             ev = triggerClick($body.find("#z"))
-            
+
             @nav.navigate.should.not.have.been.called
-            ev.preventDefault.should.not.have.been.called 
+            ev.preventDefault.should.not.have.been.called
