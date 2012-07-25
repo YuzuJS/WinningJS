@@ -24,12 +24,10 @@ describe "Navigator", ->
         $ = sandboxedModule.require("jquery-browserify", globals: { window })
         $body = $(window.document.body)
 
-        @eventObject = detail: location: ""
-
         @nav =
             _listener: null
             addEventListener: (eventName, newListener) => @nav._listener = newListener
-            navigate: sinon.spy(=> @nav._listener(@eventObject))
+            navigate: sinon.spy((location, state) => @nav._listener(detail: { location, state }))
 
         Navigator = sandboxedModule.require("../lib/ui/Navigator", requires: "jquery-browserify": $)
         @navigator = new Navigator(@nav, window.document.body)
@@ -43,9 +41,7 @@ describe "Navigator", ->
                                              <section data-winning-page="testhome" id="y">Test Home</section>
                                              '''
 
-            @eventObject.detail.location = "about"
-
-        it "should throw no location found", ->
+        it "should throw when given no location", ->
             (-> @navigator.navigate()).should.throw()
 
         it "should call 'nav' navigate method with the passed location and state", ->
@@ -63,29 +59,45 @@ describe "Navigator", ->
         beforeEach ->
             window.document.body.innerHTML = '''
                                              <div>
-                                                 <a href="/testpage" id="x">Test Page</a>
-                                                 <button data-winning-href="/testpage2" id="y">Test Page 2</button>
-                                                 <a href="" id="z">Someone is smoking crack</a>
+                                                 <a href="/testpage" id="a">Link</a>
+                                                 <button data-winning-href="/testpage2" id="b">Button</button>
+                                                 <a href="/testpage3?foo=bar&baz=quux" id="c">Query strings!</a>
+                                                 <a href="" id="d">Empty href</a>
+                                                 <a href="http://google.com" id="e">External link</a>
                                              </div>
                                              <section data-winning-page="testpage"></section>
                                              <section data-winning-page="testpage2"></section>
+                                             <section data-winning-page="testpage3"></section>
                                              '''
 
             @navigator.listenToClicks(window.document.body)
 
-        it "should work for href attributes", ->
-            ev = triggerClick($body.find("#x"))
+        it "should work for href attributes on <a> tags", ->
+            ev = triggerClick($body.find("#a"))
+
             @nav.navigate.should.have.been.calledWith("testpage")
             ev.preventDefault.should.have.been.called
 
-        it "should work with data-winning-href attributes", ->
-            ev = triggerClick($body.find("#y"))
+        it "should work with data-winning-href attributes on <button> tags", ->
+            ev = triggerClick($body.find("#b"))
 
             @nav.navigate.should.have.been.calledWith("testpage2")
             ev.preventDefault.should.have.been.called
 
+        it "should parse query strings and pass them as state to `navigate`", ->
+            ev = triggerClick($body.find("#c"))
+
+            @nav.navigate.should.have.been.calledWith("testpage3", { foo: "bar", baz: "quux" })
+            ev.preventDefault.should.have.been.called
+
         it "should not do anything if href is empty", ->
-            ev = triggerClick($body.find("#z"))
+            ev = triggerClick($body.find("#d"))
+
+            @nav.navigate.should.not.have.been.called
+            ev.preventDefault.should.not.have.been.called
+
+        it "should not do anything if href is an absolute URL", ->
+            ev = triggerClick($body.find("#e"))
 
             @nav.navigate.should.not.have.been.called
             ev.preventDefault.should.not.have.been.called
