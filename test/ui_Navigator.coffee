@@ -48,9 +48,9 @@ describe "Navigator", ->
         it "should throw no location found", ->
             (-> @navigator.navigate()).should.throw()
 
-        it "should call 'nav' navigate method", ->
-            @navigator.navigate("about")
-            @nav.navigate.should.have.been.calledWith("about")
+        it "should call 'nav' navigate method with the passed location and state", ->
+            @navigator.navigate("about", { foo: "bar" })
+            @nav.navigate.should.have.been.calledWith("about", { foo: "bar" })
 
         it "should show and hide sections", ->
             @navigator.navigate("about")
