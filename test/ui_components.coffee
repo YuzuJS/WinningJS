@@ -28,7 +28,8 @@ createFlyoutConstructor = components.createFlyoutConstructor
 
 describe "UI components utility", ->
     describe "creating a flyout component", ->
-        FlyoutComponent = createFlyoutConstructor(-> template: -> "<div>My Flyout</div>")
+        presenterOptsFactory = sinon.stub().returns(template: -> "<div>My Flyout</div>")
+        FlyoutComponent = createFlyoutConstructor(presenterOptsFactory)
         anchorEl = null
 
         beforeEach -> anchorEl = document.createElement("a")
@@ -44,6 +45,10 @@ describe "UI components utility", ->
             component.render().then (componentRootEl) ->
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("aftershow")
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("afterhide")
+
+        it "should pass all arguments exluding the first to the presenter factory", ->
+            component = new FlyoutComponent(anchor: anchorEl, 1, 2, 3)
+            presenterOptsFactory.should.have.been.calledWith(1, 2, 3)
 
         describe "on the corresponding flyout win control", ->
             it "should set the anchor if option is set", ->
