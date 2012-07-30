@@ -11,6 +11,7 @@ requireApp = (winJS = {}) ->
     winJS.Application ?= start: ->
     winJS.UI ?= processAll: ->
     winJS.UI._ElementsPool = prototype: {}
+    winJS.UI.ListView = prototype: {}
 
     sandboxedModule.require("../lib/app", globals: { WinJS: winJS, Windows: Windows })
 
