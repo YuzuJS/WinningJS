@@ -51,7 +51,7 @@ describe "Using the Flyout presenter plugin", ->
 
         beforeEach ->
             flyout = createFlyout("Flyout One")
-            plugin = new FlyoutPlugin(showFlyout: flyout)
+            plugin = new FlyoutPlugin(showFlyout: -> flyout)
             element = document.createElement("section")
             element.innerHTML = '<button data-winning-flyout="showFlyout">Click me.</button>'
 
