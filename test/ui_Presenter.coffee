@@ -20,9 +20,10 @@ Presenter = do ->
         Error: Error # necessary for `instanceof Error` checks :-/
     requires =
         knockoutify: ko
+        domify: sandboxedModule.require("domify/lib/domify", { globals })
         "../resources": require("../lib/resources")
 
-    sandboxedModule.require("../lib/ui/Presenter", globals: globals, requires: requires)
+    sandboxedModule.require("../lib/ui/Presenter", { globals, requires })
 
 describe "Create UI presenter", ->
     beforeEach ->
@@ -69,16 +70,6 @@ describe "Create UI presenter", ->
 
             presenter.process().then (element) ->
                 WinJS.Resources.processAll.should.have.been.calledWith(element)
-
-        describe "when the template returns zero elements", ->
-            it "should fail with an informative error", ->
-                expect(-> new Presenter(template: -> ""))
-                    .to.throw("Expected the template to render exactly one element.")
-
-        describe "when the template returns more than one element", ->
-            it "should fail with an informative error", ->
-                expect(-> new Presenter(template: -> "<header></header><section></section>"))
-                    .to.throw("Expected the template to render exactly one element.")
 
         describe "with viewModel", ->
             it "should apply Knockout bindings", ->
