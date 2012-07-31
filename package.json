@@ -23,6 +23,7 @@
         "lint": "jshint lib --show-non-errors"
     },
     "dependencies": {
+        "domify": "git://github.com/domenic/domify.git#better",
         "jquery-browserify": ">= 1.7.2",
         "knockoutify": "git://github.com/guillaume86/knockoutify.git",
         "pubit": ">= 1.2.1",
@@ -43,6 +44,7 @@
         "sinon-chai": ">= 2.1.2"
     },
     "_dependencyComments": {
+        "domify": "Need https://github.com/component/domify/pull/3 and https://github.com/component/domify/pull/4",
         "knockoutify": "Need version 2.1.0; the npm version is 2.0.0."
     }
 }
