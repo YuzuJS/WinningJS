@@ -44,68 +44,67 @@ createFlyout = (title) ->
     return flyout
 
 describe "Using the Flyout presenter plugin", ->
-    describe "and one or more data-winning-flyout attributes exists in the template markup", ->
-        element = null
-        flyout = null
-        plugin = null
+    element = null
+    flyout = null
+    plugin = null
 
-        beforeEach ->
-            flyout = createFlyout("Flyout One")
-            plugin = new FlyoutPlugin(showFlyout: -> flyout)
-            element = document.createElement("section")
-            element.innerHTML = '<button data-winning-flyout="showFlyout">Click me.</button>'
+    beforeEach ->
+        flyout = createFlyout("Flyout One")
+        plugin = new FlyoutPlugin(showFlyout: -> flyout)
+        element = document.createElement("section")
+        element.innerHTML = '<button data-winning-flyout="showFlyout">Click me.</button>'
 
-        afterEach ->
-            $(document.body).empty()
+    afterEach ->
+        $(document.body).empty()
 
-        it "should call the flyout's render/show method on click of the element the attribute was found on.", (done) ->
-            element = plugin.process(element)
+    it "should call the flyout's render/show method on click of the element the attribute was found on.", (done) ->
+        element = plugin.process(element)
 
-            button = element.querySelector("button[data-winning-flyout]")
-            triggerClickFor(button)
+        button = element.querySelector("button[data-winning-flyout]")
+        triggerClickFor(button)
 
-            flyout.render.should.have.been.called
-            flyout.on("show", -> done())
+        flyout.render.should.have.been.called
+        flyout.on("show", -> done())
 
-        describe "when the anchor value of the flyout component", ->
-            describe "is NOT set", ->
-                it "should call show with the current anchor passed and the flyout should exist in DOM", (done) ->
-                    element = plugin.process(element)
-
-                    button = element.querySelector("button[data-winning-flyout]")
-                    triggerClickFor(button)
-
-                    flyout.on("show", ->
-                         flyout.show.should.have.been.calledWith(button)
-                         document.body.querySelectorAll(".flyout").length.should.equal(1)
-                         done()
-                    )
-
-            describe "is set", ->
-                it "should call show with that anchor", (done) ->
-                    element = plugin.process(element)
-
-                    button = element.querySelector("button[data-winning-flyout]")
-                    anchor = document.createElement("a")
-                    document.body.appendChild(anchor)
-                    flyout.anchor = anchor
-
-                    triggerClickFor(button)
-
-                    flyout.on("show", ->
-                         flyout.show.should.have.been.calledWith(anchor)
-                         done()
-                    )
-
-        describe "when the flyout is hidden", ->
-            it "should remove the flyout from the DOM", (done) ->
+    describe "when the anchor value of the flyout component", ->
+        describe "is NOT set", ->
+            it "should call show with the current anchor passed and the flyout should exist in DOM", (done) ->
                 element = plugin.process(element)
 
                 button = element.querySelector("button[data-winning-flyout]")
                 triggerClickFor(button)
 
                 flyout.on("show", ->
-                    flyout.hide()
-                    document.body.querySelectorAll(".flyout").length.should.equal(0)
-                    done()
+                     flyout.show.should.have.been.calledWith(button)
+                     document.body.querySelectorAll(".flyout").length.should.equal(1)
+                     done()
                 )
+
+        describe "is set", ->
+            it "should call show with that anchor", (done) ->
+                element = plugin.process(element)
+
+                button = element.querySelector("button[data-winning-flyout]")
+                anchor = document.createElement("a")
+                document.body.appendChild(anchor)
+                flyout.anchor = anchor
+
+                triggerClickFor(button)
+
+                flyout.on("show", ->
+                     flyout.show.should.have.been.calledWith(anchor)
+                     done()
+                )
+
+    describe "when the flyout is hidden", ->
+        it "should remove the flyout from the DOM", (done) ->
+            element = plugin.process(element)
+
+            button = element.querySelector("button[data-winning-flyout]")
+            triggerClickFor(button)
+
+            flyout.on("show", ->
+                flyout.hide()
+                document.body.querySelectorAll(".flyout").length.should.equal(0)
+                done()
+            )
