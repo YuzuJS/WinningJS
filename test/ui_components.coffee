@@ -141,3 +141,49 @@ describe "UI components utility", ->
         it "should pass the options directly to the presenter", ->
             new FlyoutComponent()
             Presenter.should.have.been.calledWith(presenterOpts)
+
+
+    describe "mixing in showable capabilities", ->
+        [elementDeferred, presenter, target] = [null, null, null]
+
+        beforeEach ->
+            elementDeferred = Q.defer()
+            presenter = element: elementDeferred.promise
+
+            target = {}
+            components.mixinShowable(target, presenter)
+
+        it "should put `show` and `hide` methods on the target", ->
+
+            target.should.respondTo("show")
+            target.should.respondTo("hide")
+
+        describe "The `show` method", ->
+            beforeEach -> sinon.stub($.fn, "show")
+            afterEach -> $.fn.show.restore()
+
+            it "should do nothing until the element promise is resolved, but then show the element", ->
+                target.show()
+
+                $.fn.show.should.not.have.been.called
+
+                element = {}
+                Q.delay(0).then -> elementDeferred.resolve(element)
+
+                elementDeferred.promise.then ->
+                    expect($.fn.show.thisValues[0]).to.have.property("0", element)
+
+        describe "The `hide` method", ->
+            beforeEach -> sinon.stub($.fn, "hide")
+            afterEach -> $.fn.hide.restore()
+
+            it "should do nothing until the element promise is resolved, but then hide the element", ->
+                target.hide()
+
+                $.fn.hide.should.not.have.been.called
+
+                element = {}
+                Q.delay(0).then -> elementDeferred.resolve(element)
+
+                elementDeferred.promise.then ->
+                    expect($.fn.hide.thisValues[0]).to.have.property("0", element)
