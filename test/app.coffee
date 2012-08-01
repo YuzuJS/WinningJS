@@ -1,6 +1,7 @@
 "use strict"
 
 sandboxedModule = require("sandboxed-module")
+EventEmitter = require("events").EventEmitter
 
 Windows =
     ApplicationModel: Activation:
@@ -12,6 +13,10 @@ requireApp = (winJS = {}) ->
     winJS.UI ?= processAll: ->
     winJS.UI._ElementsPool = prototype: {}
     winJS.UI.ListView = prototype: {}
+
+    applicationEE = new EventEmitter()
+    winJS.Application.addEventListener = applicationEE.on.bind(applicationEE)
+    winJS.Application.dispatchEvent = applicationEE.emit.bind(applicationEE)
 
     sandboxedModule.require("../lib/app", globals: { WinJS: winJS, Windows: Windows })
 
@@ -31,7 +36,7 @@ describe "app", ->
             app = requireApp(stubWinJS)
             app.start()
 
-            stubWinJS.Application.onactivated(@eventObject)
+            stubWinJS.Application.dispatchEvent("activated", @eventObject)
 
             stubWinJS.UI.processAll.should.have.been.calledOnce
 
@@ -47,7 +52,7 @@ describe "app", ->
                 spy = sinon.spy()
                 app.on("launch", spy)
 
-                stubWinJS.Application.onactivated(@eventObject)
+                stubWinJS.Application.dispatchEvent("activated", @eventObject)
 
                 spy.should.have.been.calledWith(@eventObject)
 
@@ -64,7 +69,7 @@ describe "app", ->
                 spy = sinon.spy()
                 app.on("reactivate", spy)
 
-                stubWinJS.Application.onactivated(@eventObject)
+                stubWinJS.Application.dispatchEvent("activated", @eventObject)
 
                 spy.should.have.been.calledWith(@eventObject)
 
@@ -78,6 +83,6 @@ describe "app", ->
             app.on("beforeSuspend", spy)
 
             eventObject = {}
-            stubWinJS.Application.oncheckpoint(eventObject)
+            stubWinJS.Application.dispatchEvent("checkpoint", eventObject)
 
             spy.should.have.been.calledWith(eventObject)
