@@ -71,6 +71,11 @@ describe "Create UI presenter", ->
             presenter.process().then (element) ->
                 WinJS.Resources.processAll.should.have.been.calledWith(element)
 
+        it "works even if an option called hasOwnProperty is passed", ->
+            presenter = new Presenter(hasOwnProperty: 5, template: -> "<p>Hi</p>")
+
+            presenter.process()
+
         describe "with viewModel", ->
             it "should apply Knockout bindings", ->
                 viewModel = name: "My name"

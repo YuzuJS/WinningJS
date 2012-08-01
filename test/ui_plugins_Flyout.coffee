@@ -66,6 +66,11 @@ describe "Using the Flyout presenter plugin", ->
         flyout.render.should.have.been.called
         flyout.on("show", -> done())
 
+    it "should work even if one of the keys is hasOwnProperty", ->
+        plugin = new FlyoutPlugin(hasOwnProperty: 5)
+        element.innerHTML = '<button data-winning-flyout="hasOwnProperty">Click me.</button>'
+        (-> plugin.process(element)).should.not.throw()
+
     describe "when the anchor value of the flyout component", ->
         describe "is NOT set", ->
             it "should call show with the current anchor passed and the flyout should exist in DOM", (done) ->
