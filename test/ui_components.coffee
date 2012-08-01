@@ -5,22 +5,22 @@ window = jsdom(null, null, features: QuerySelector: true).createWindow()
 document = window.document
 Q = require("q")
 
+Presenter = sinon.spy class
+    constructor: (options) ->
+        document.body.innerHTML = options.template()
+        componentRootEl = document.body.firstChild
+        componentRootEl.winControl =
+            show: sinon.spy(->
+                throw new Error("No anchor set!") unless componentRootEl.winControl.anchor
+            )
+            hide: sinon.stub(),
+            addEventListener: sinon.stub()
+
+        @use = (plugin) -> plugin.process(componentRootEl)
+        @process = sinon.stub().returns(Q.resolve(componentRootEl))
+        @winControl = Q.resolve(componentRootEl.winControl)
+
 components = do ->
-    class Presenter
-        constructor: (options) ->
-            document.body.innerHTML = options.template()
-            componentRootEl = document.body.firstChild
-            componentRootEl.winControl =
-                show: sinon.spy(->
-                    throw new Error("No anchor set!") unless componentRootEl.winControl.anchor
-                )
-                hide: sinon.stub(),
-                addEventListener: sinon.stub()
-
-            @use = (plugin) -> plugin.process(componentRootEl)
-            @process = sinon.stub().returns(Q.resolve(componentRootEl))
-            @winControl = Q.resolve(componentRootEl.winControl)
-
     sandboxedModule = require("sandboxed-module")
     sandboxedModule.require("../lib/ui/components", requires: "./Presenter": Presenter)
 
@@ -46,8 +46,8 @@ describe "UI components utility", ->
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("aftershow")
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("afterhide")
 
-        it "should pass all arguments exluding the first to the presenter factory", ->
-            component = new FlyoutComponent(anchor: anchorEl, 1, 2, 3)
+        it "should pass all arguments exluding the first to the presenter options factory", ->
+            new FlyoutComponent(anchor: anchorEl, 1, 2, 3)
             presenterOptsFactory.should.have.been.calledWith(1, 2, 3)
 
         describe "on the corresponding flyout win control", ->
@@ -124,3 +124,12 @@ describe "UI components utility", ->
                 component.render().then (componentRootEl) ->
                     for plugin in plugins
                         plugin.process.should.have.been.calledWith(componentRootEl)
+
+
+    describe "creating a flyout component using an options object instead of an options factory", ->
+        presenterOpts = { template: -> "<div>My Flyout</div>" }
+        FlyoutComponent = createFlyoutConstructor(presenterOpts)
+
+        it "should pass the options directly to the presenter", ->
+            new FlyoutComponent()
+            Presenter.should.have.been.calledWith(presenterOpts)
