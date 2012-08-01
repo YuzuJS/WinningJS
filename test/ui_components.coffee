@@ -1,39 +1,44 @@
 "use strict"
 
 jsdom = require("jsdom").jsdom
-window = jsdom(null, null, features: QuerySelector: true).createWindow()
-document = window.document
+sandboxedModule = require("sandboxed-module")
 Q = require("q")
 
-Presenter = sinon.spy class
-    constructor: (options) ->
-        document.body.innerHTML = options.template()
-        componentRootEl = document.body.firstChild
-        componentRootEl.winControl =
-            show: sinon.spy(->
-                throw new Error("No anchor set!") unless componentRootEl.winControl.anchor
-            )
-            hide: sinon.stub(),
-            addEventListener: sinon.stub()
-
-        @use = (plugin) -> plugin.process(componentRootEl)
-        @process = sinon.stub().returns(Q.resolve(componentRootEl))
-        @winControl = Q.resolve(componentRootEl.winControl)
-
-components = do ->
-    sandboxedModule = require("sandboxed-module")
-    sandboxedModule.require("../lib/ui/components", requires: "./Presenter": Presenter)
-
-createFlyoutConstructor = components.createFlyoutConstructor
-
 describe "UI components utility", ->
-    describe "creating a flyout component", ->
-        presenterOptsFactory = sinon.stub().returns(template: -> "<div>My Flyout</div>")
-        FlyoutComponent = createFlyoutConstructor(presenterOptsFactory)
-        anchorEl = null
+    [document, $, Presenter, components] = [null, null, null, null]
 
-        beforeEach -> anchorEl = document.createElement("a")
-        afterEach -> document.body.innerHTML = ""
+    beforeEach ->
+        window = jsdom(null, null, features: QuerySelector: true).createWindow()
+        document = window.document
+        $ = sandboxedModule.require("jquery-browserify", globals: { window, document })
+
+        Presenter = sinon.spy class
+            constructor: (options) ->
+                document.body.innerHTML = options.template()
+                componentRootEl = document.body.firstChild
+                componentRootEl.winControl =
+                    show: sinon.spy(->
+                        throw new Error("No anchor set!") unless componentRootEl.winControl.anchor
+                    )
+                    hide: sinon.stub(),
+                    addEventListener: sinon.stub()
+
+                @use = (plugin) -> plugin.process(componentRootEl)
+                @process = sinon.stub().returns(Q.resolve(componentRootEl))
+                @winControl = Q.resolve(componentRootEl.winControl)
+
+        requires = { "./Presenter": Presenter, "jquery-browserify": $ }
+        components = sandboxedModule.require("../lib/ui/components", { requires })
+
+    describe "creating a flyout component", ->
+        [presenterOptsFactory, FlyoutComponent, anchorEl] = [null, null, null]
+
+        beforeEach ->
+            presenterOptsFactory = sinon.stub().returns(template: -> "<div>My Flyout</div>")
+            FlyoutComponent = components.createFlyoutConstructor(presenterOptsFactory)
+            anchorEl = document.createElement("a")
+        afterEach ->
+            document.body.innerHTML = ""
 
         it "should implement the flyout component api and listen to winControl events", ->
             component = new FlyoutComponent(anchor: anchorEl)
@@ -127,9 +132,58 @@ describe "UI components utility", ->
 
 
     describe "creating a flyout component using an options object instead of an options factory", ->
-        presenterOpts = { template: -> "<div>My Flyout</div>" }
-        FlyoutComponent = createFlyoutConstructor(presenterOpts)
+        [presenterOpts, FlyoutComponent] = [null, null]
+
+        beforeEach ->
+            presenterOpts = { template: -> "<div>My Flyout</div>" }
+            FlyoutComponent = components.createFlyoutConstructor(presenterOpts)
 
         it "should pass the options directly to the presenter", ->
             new FlyoutComponent()
             Presenter.should.have.been.calledWith(presenterOpts)
+
+
+    describe "mixing in showable capabilities", ->
+        [elementDeferred, presenter, target] = [null, null, null]
+
+        beforeEach ->
+            elementDeferred = Q.defer()
+            presenter = element: elementDeferred.promise
+
+            target = {}
+            components.mixinShowable(target, presenter)
+
+        it "should put `show` and `hide` methods on the target", ->
+
+            target.should.respondTo("show")
+            target.should.respondTo("hide")
+
+        describe "The `show` method", ->
+            beforeEach -> sinon.stub($.fn, "show")
+            afterEach -> $.fn.show.restore()
+
+            it "should do nothing until the element promise is resolved, but then show the element", ->
+                target.show()
+
+                $.fn.show.should.not.have.been.called
+
+                element = {}
+                Q.delay(0).then -> elementDeferred.resolve(element)
+
+                elementDeferred.promise.then ->
+                    expect($.fn.show.thisValues[0]).to.have.property("0", element)
+
+        describe "The `hide` method", ->
+            beforeEach -> sinon.stub($.fn, "hide")
+            afterEach -> $.fn.hide.restore()
+
+            it "should do nothing until the element promise is resolved, but then hide the element", ->
+                target.hide()
+
+                $.fn.hide.should.not.have.been.called
+
+                element = {}
+                Q.delay(0).then -> elementDeferred.resolve(element)
+
+                elementDeferred.promise.then ->
+                    expect($.fn.hide.thisValues[0]).to.have.property("0", element)
