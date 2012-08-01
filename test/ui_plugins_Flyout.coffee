@@ -71,6 +71,11 @@ describe "Using the Flyout presenter plugin", ->
         element.innerHTML = '<button data-winning-flyout="hasOwnProperty">Click me.</button>'
         (-> plugin.process(element)).should.not.throw()
 
+    it "should throw a helpful error if a key is in the markup but not in the flyout map", ->
+        plugin = new FlyoutPlugin({})
+        (-> plugin.process(element)).should.throw(/no handler was found for "showFlyout"/i)
+
+
     describe "when the anchor value of the flyout component", ->
         describe "is NOT set", ->
             it "should call show with the current anchor passed and the flyout should exist in DOM", (done) ->
