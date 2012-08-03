@@ -28,6 +28,7 @@ FlyoutPlugin = do ->
 
 createFlyout = (title) ->
     flyout = {}
+    rootElement = $("<div class='flyout'> #{ title } </div>")[0]
     publish = makeEmitter(flyout, ["show", "hide"])
 
     flyout.show = sinon.spy(->
@@ -38,7 +39,9 @@ createFlyout = (title) ->
         publish("hide", flyout)
         Q.resolve()
     )
-    flyout.render = sinon.stub().returns(Q.resolve($("<div class='flyout'>" + title + "</div>")[0]))
+
+    flyout.render = sinon.stub().returns(rootElement)
+    flyout.process = sinon.stub().returns(Q.resolve(rootElement))
     flyout.publish = publish
 
     return flyout
@@ -57,7 +60,7 @@ describe "Using the Flyout presenter plugin", ->
     afterEach ->
         $(document.body).empty()
 
-    it "should call the flyout's render/show method on click of the element the attribute was found on.", (done) ->
+    it "should call the flyout's render/show method on click of the element the attribute was found on", (done) ->
         element = plugin.process(element)
 
         button = element.querySelector("button[data-winning-flyout]")
