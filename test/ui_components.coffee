@@ -17,15 +17,16 @@ describe "UI components utility", ->
                 document.body.innerHTML = options.template()
                 componentRootEl = document.body.firstChild
                 componentRootEl.winControl =
-                    show: sinon.spy(->
-                        throw new Error("No anchor set!") unless componentRootEl.winControl.anchor
+                    show: sinon.spy((anchor) ->
+                        # Throw error if control does not have anchor and anchor is not passed in as first arg.
+                        throw new Error("No anchor set!") unless componentRootEl.winControl.anchor or anchor
                     )
                     hide: sinon.stub(),
                     addEventListener: sinon.stub()
 
                 @use = (plugin) -> plugin.process(componentRootEl)
+                @render = sinon.stub().returns(componentRootEl)
                 @process = sinon.stub().returns(Q.resolve(componentRootEl))
-                @winControl = Q.resolve(componentRootEl.winControl)
 
         requires = { "./Presenter": Presenter, "jquery-browserify": $ }
         components = sandboxedModule.require("../lib/ui/components", { requires })
@@ -47,7 +48,8 @@ describe "UI components utility", ->
             expect(component).to.respondTo("hide")
             expect(component).to.have.ownProperty("anchor")
 
-            component.render().then (componentRootEl) ->
+            component.render()
+            component.process().then (componentRootEl) ->
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("aftershow")
                 expect(componentRootEl.winControl.addEventListener).to.have.been.calledWith("afterhide")
 
@@ -59,62 +61,72 @@ describe "UI components utility", ->
             it "should set the anchor if option is set", ->
                 component = new FlyoutComponent(anchor: anchorEl)
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     expect(componentRootEl.winControl.anchor).to.equal(anchorEl)
 
             it "should set the anchor when the anchor property is set", ->
                 component = new FlyoutComponent()
                 component.anchor = anchorEl
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     expect(componentRootEl.winControl.anchor).to.equal(anchorEl)
 
             it "should set the placement if option is set", ->
                 component = new FlyoutComponent(placement: "top")
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     expect(componentRootEl.winControl.placement).to.equal("top")
 
             it "should set the alignment if option is set", ->
                 component = new FlyoutComponent(alignment: "left")
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     expect(componentRootEl.winControl.alignment).to.equal("left")
 
         describe "when show is invoked", ->
             it "should proxy to win control", ->
                 component = new FlyoutComponent(anchor: anchorEl)
+                flyoutEl = null
 
                 component.render()
-                    .then((componentRootEl) ->
+                component.process()
+                    .then((element) ->
+                        flyoutEl = element
                         component.show()
-                        return componentRootEl
                     )
-                    .then (componentRootEl) ->
-                        expect(componentRootEl.winControl.show).to.have.been.called
+                    .then ->
+                        expect(flyoutEl.winControl.show).to.have.been.called
 
             it "should proxy to win control passing in any arguments", ->
                 component = new FlyoutComponent()
+                flyoutEl = null
 
                 component.render()
-                    .then((componentRootEl) ->
+                component.process()
+                    .then((element) ->
+                        flyoutEl = element
                         component.show(anchorEl)
-                        return componentRootEl
                     )
-                    .then (componentRootEl) ->
-                        expect(componentRootEl.winControl.show).to.have.been.calledWith(anchorEl)
+                    .then ->
+                        expect(flyoutEl.winControl.show).to.have.been.calledWith(anchorEl)
 
             it "should be rejected if no anchor has been set", ->
                 component = new FlyoutComponent()
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     expect(component.show()).to.be.rejected.with(Error)
 
         describe "when hide is invoked", ->
             it "should proxy to win control", ->
                 component = new FlyoutComponent()
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     component.hide()
                     expect(componentRootEl.winControl.hide).to.have.beenCalled
 
@@ -126,7 +138,8 @@ describe "UI components utility", ->
                 plugins = [fooPlugin, barPlugin]
                 component = new FlyoutComponent(plugins: plugins)
 
-                component.render().then (componentRootEl) ->
+                component.render()
+                component.process().then (componentRootEl) ->
                     for plugin in plugins
                         plugin.process.should.have.been.calledWith(componentRootEl)
 
