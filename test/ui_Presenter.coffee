@@ -22,6 +22,7 @@ Presenter = do ->
         knockoutify: ko
         domify: sandboxedModule.require("domify/lib/domify", { globals })
         "../resources": require("../lib/resources")
+        "jquery-browserify": $
 
     sandboxedModule.require("../lib/ui/Presenter", { globals, requires })
 
@@ -93,7 +94,7 @@ describe "Create UI presenter", ->
                 )
 
                 element = presenter.render()
-                    
+
                 element.tagName.should.equal("SECTION")
                 $(element).find("div").hasClass("class").should.be.true
                 $(element).find("region").length.should.equal(0)
