@@ -5,7 +5,7 @@ WinJS = Resources: {}
 resources = do ->
     sandboxedModule = require("sandboxed-module")
 
-    globals = 
+    globals =
         WinJS: WinJS
         Error: Error
 
@@ -27,9 +27,9 @@ describe "resources", ->
 
         WinJS.Resources = getString: getStringStub
         resources.augmentGetString()
-    
+
     describe "augmentGetString", ->
-        
+
         it "should work when no replacements are required", ->
             WinJS.Resources.getString("string1").value.should.equal("STRING 1")
 
@@ -44,7 +44,7 @@ describe "resources", ->
                                     .equal("STRING 4 AND STRING 2 AND STRING 1 AND STRING 3 AND STRING 1")
 
     describe "s", ->
-        
+
         it "should work like WinningJS augmented WinJS.Resources.getString", ->
             s("string4").should.equal("STRING 4 AND STRING 2 AND STRING 1")
             s("string1").should.equal("STRING 1")
