@@ -5,7 +5,7 @@ WinJS = Resources: {}
 resources = do ->
     sandboxedModule = require("sandboxed-module")
 
-    globals = 
+    globals =
         WinJS: WinJS
         Error: Error
 
@@ -24,12 +24,13 @@ describe "resources", ->
         getStringStub.withArgs("string5").returns(value: "{^string4} AND {^string3}")
         getStringStub.withArgs("string12").returns(value: "string12", empty: true)
         getStringStub.withArgs("string6").returns(value: "{^string12}")
+        getStringStub.withArgs("string_f").returns(value: "hello %s %s")
 
         WinJS.Resources = getString: getStringStub
         resources.augmentGetString()
-    
+
     describe "augmentGetString", ->
-        
+
         it "should work when no replacements are required", ->
             WinJS.Resources.getString("string1").value.should.equal("STRING 1")
 
@@ -44,7 +45,7 @@ describe "resources", ->
                                     .equal("STRING 4 AND STRING 2 AND STRING 1 AND STRING 3 AND STRING 1")
 
     describe "s", ->
-        
+
         it "should work like WinningJS augmented WinJS.Resources.getString", ->
             s("string4").should.equal("STRING 4 AND STRING 2 AND STRING 1")
             s("string1").should.equal("STRING 1")
@@ -56,3 +57,6 @@ describe "resources", ->
         it "should throw an error if resource was not found", ->
             (-> s("string12")).should.throw("Resource with key 'string12' not found.")
             (-> s("string6")).should.throw("Resource with key 'string12' not found.")
+
+        it "should act as `sprintf` on the returned string using any extra parameters", ->
+            s("string_f", "goodbye", "goodnight").should.equal("hello goodbye goodnight")
