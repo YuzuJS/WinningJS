@@ -1,8 +1,9 @@
 "use strict"
 
+Q = require("q")
 makeEmitter = require("pubit").makeEmitter
 
-{ $, ko, koUtils } = do ->
+{ $, document, ko, koUtils } = do ->
     jsdom = require("jsdom").jsdom
     sandboxedModule = require("sandboxed-module")
 
@@ -17,7 +18,7 @@ makeEmitter = require("pubit").makeEmitter
     ko = sandboxedModule.require("knockoutify", globals: globals)
     koUtils = sandboxedModule.require("../lib/ui/util/knockout", globals: globals, requires: knockoutify: ko)
 
-    return { $, ko, koUtils }
+    return { $, document: window.document, ko, koUtils }
 
 describe "Using the knockout util", ->
 
@@ -60,14 +61,16 @@ describe "Using the knockout util", ->
                 observable().should.equal("hi there")
 
     describe "addBindings", ->
+        beforeEach ->
+            koUtils.addBindings()
+
         describe "when the custom binding `itemInvoked` is present in the markup", ->
             el = null
-            viewModel =
-                onItemInvoked: sinon.stub()
+            viewModel = null
 
             beforeEach ->
-                koUtils.addBindings()
                 el = $('<div data-bind="itemInvoked: onItemInvoked">Test</div>')[0]
+                viewModel = onItemInvoked: sinon.stub()
 
             describe "and the element owns a winControl", ->
                 beforeEach ->
@@ -80,3 +83,37 @@ describe "Using the knockout util", ->
 
                 it "should callback the `iteminvoked` event listener", ->
                     viewModel.onItemInvoked.should.have.been.calledWith(el.winControl)
+
+        describe "when the custom binding `component` is present in the markup", ->
+            parent = null
+            el = null
+            viewModel = null
+            componentProcessPromise = null
+
+            beforeEach ->
+                parent = document.createElement("div")
+                el = $('<div data-bind="component: theComponent">Test</div>')[0]
+                parent.appendChild(el)
+
+                componentProcessPromise = Q.resolve($('<div>Component One</div>')[0])
+                viewModel =
+                    theComponent:
+                        render: sinon.spy()
+                        process: sinon.stub().returns(componentProcessPromise)
+                        onWinControlAvailable: sinon.spy()
+            
+            describe "and we have rendered components", ->
+                beforeEach ->
+                    ko.applyBindings(viewModel, el)
+
+                it "should call component's `render` and `process` methods", ->
+                    viewModel.theComponent.render.should.have.beenCalled
+                    viewModel.theComponent.process.should.have.beenCalled
+
+                it "should call `onWinControlAvailable` on the component if available", ->
+                    componentProcessPromise.then ->
+                        viewModel.theComponent.onWinControlAvailable.should.have.been.called
+
+                it "should replace the placeholder element with the component's element", ->
+                    componentProcessPromise.then ->
+                        parent.innerHTML.should.equal('<div>Component One</div>')
