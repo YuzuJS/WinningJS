@@ -29,8 +29,15 @@ Presenter = do ->
 
 describe "Create UI presenter", ->
     beforeEach ->
-        WinJS.UI.processAll = sinon.stub().returns(Q.resolve())
-        WinJS.Resources.processAll = sinon.stub().returns(Q.resolve())
+        WinJS.UI.processAll = sinon.spy (el) ->
+            if el.hasAttribute("data-win-control")
+                el.winControl = {}
+            for childControl in el.querySelectorAll("[data-win-control]")
+                childControl.winControl = {}
+
+            return Q.resolve()
+        WinJS.UI.setOptions = sinon.spy()
+        WinJS.Resources.processAll = sinon.spy()
         ko.applyBindings = sinon.spy()
 
     it "should result in the object having a `render` and `process` method", ->
@@ -152,6 +159,39 @@ describe "Create UI presenter", ->
             presenter.render()
             presenter.process().then (element) ->
                 WinJS.UI.processAll.should.have.been.calledWith(element)
+
+        it "should set options on the root winControl with :scope", ->
+            presenter = new Presenter(
+                template: -> """<div data-win-control="WinJS.UI.ListView"></div>"""
+                winControls:
+                    ":scope":
+                        foo: "bar"
+                        baz: "quux"
+            )
+
+            presenter.render()
+            presenter.process().then (element) ->
+                WinJS.UI.processAll.should.have.been.calledWith(element)
+                WinJS.UI.setOptions.should.have.been.calledWith(element.winControl, { foo: "bar", baz: "quux" })
+
+        it "should set options on children winControls corresponding to their selectors", ->
+            presenter = new Presenter(
+                template: -> """
+                                <div>
+                                    <div class="a" data-win-control="WinJS.UI.ListView"></div>
+                                    <div id="b" data-win-control="WinJS.UI.DatePicker"></div>
+                                </div>
+                            """
+                winControls:
+                    ".a": foo: "bar"
+                    "#b": baz: "quux"
+            )
+
+            presenter.render()
+            presenter.process().then (element) ->
+                WinJS.UI.processAll.should.have.been.calledWith(element)
+                WinJS.UI.setOptions.should.have.been.calledWith(element.querySelector(".a").winControl, { foo: "bar" })
+                WinJS.UI.setOptions.should.have.been.calledWith(element.querySelector("#b").winControl, { baz: "quux" })
 
     describe "bindViewModel", ->
         it "should call `ko.applyBindings` after waiting for the element promise", ->
