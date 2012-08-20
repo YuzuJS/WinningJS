@@ -16,6 +16,8 @@
     "browser": true,
     "indent": 4,
     "predef": [
+        "MSApp",
+        "setImmediate",
         "WinJS",
         "Windows"
     ]
