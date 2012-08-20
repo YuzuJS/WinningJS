@@ -17,6 +17,7 @@ Presenter = do ->
         window: window
         document: window.document
         WinJS: WinJS
+        MSApp: execUnsafeLocalFunction: (f) -> f()
         Error: Error # necessary for `instanceof Error` checks :-/
     requires =
         knockoutify: ko

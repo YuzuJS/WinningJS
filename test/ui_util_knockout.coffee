@@ -95,13 +95,14 @@ describe "Using the knockout util", ->
                 el = $('<div data-bind="component: theComponent">Test</div>')[0]
                 parent.appendChild(el)
 
-                componentProcessPromise = Q.resolve($('<div>Component One</div>')[0])
+                componentEl = $('<div>Component One</div>')[0]
+                componentProcessPromise = Q.resolve(componentEl)
                 viewModel =
                     theComponent:
-                        render: sinon.spy()
+                        render: sinon.stub().returns(componentEl)
                         process: sinon.stub().returns(componentProcessPromise)
                         onWinControlAvailable: sinon.spy()
-            
+
             describe "and we have rendered components", ->
                 beforeEach ->
                     ko.applyBindings(viewModel, el)
@@ -115,5 +116,4 @@ describe "Using the knockout util", ->
                         viewModel.theComponent.onWinControlAvailable.should.have.been.called
 
                 it "should replace the placeholder element with the component's element", ->
-                    componentProcessPromise.then ->
-                        parent.innerHTML.should.equal('<div>Component One</div>')
+                    parent.innerHTML.should.equal('<div>Component One</div>')
