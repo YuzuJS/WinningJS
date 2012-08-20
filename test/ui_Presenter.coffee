@@ -70,13 +70,6 @@ describe "Create UI presenter", ->
 
             presenter.render()
 
-        it "should call `WinJS.Resources.processAll` on the resulting element", ->
-            presenter = new Presenter(template: -> "<p>Hi</p>")
-
-            element = presenter.render()
-
-            WinJS.Resources.processAll.should.have.been.calledWith(element)
-
         describe "with viewModel", ->
             it "should apply Knockout bindings", ->
                 viewModel = name: "My name"
@@ -153,6 +146,13 @@ describe "Create UI presenter", ->
                     ko.applyBindings.should.not.throw
 
     describe "process", ->
+        it "should call `WinJS.Resources.processAll` on the resulting element", ->
+            presenter = new Presenter(template: -> "<p>Hi</p>")
+
+            element = presenter.render()
+            presenter.process().then (element) ->
+                WinJS.Resources.processAll.should.have.been.calledWith(element)
+
         it "should call `WinJS.UI.processAll` on the resulting element", ->
             presenter = new Presenter(template: -> "<p>Hi</p>")
 
