@@ -1,7 +1,7 @@
 "use strict"
 
 Q = require("q")
-makeEmitter = require("pubit").makeEmitter
+EventEmitter = require("events").EventEmitter
 
 { $, document, ko, koUtils } = do ->
     jsdom = require("jsdom").jsdom
@@ -29,19 +29,27 @@ describe "Knockout custom bindings", ->
 
         beforeEach ->
             el = $('<div data-bind="itemInvoked: onItemInvoked">Test</div>')[0]
-            viewModel = onItemInvoked: sinon.stub()
+            viewModel = onItemInvoked: sinon.spy()
 
         describe "and the element owns a winControl", ->
+            trigger = null
+
             beforeEach ->
-                el.winControl = addEventListener: sinon.stub()
-                el.winControl.addEventListener.callsArgWith(1, el.winControl)
+                ee = new EventEmitter()
+
+                el.winControl = addEventListener: ee.on.bind(ee)
+                trigger = (args...) -> ee.emit("iteminvoked", args...)
+
                 ko.applyBindings(viewModel, el)
 
-            it "should call `addEventListener` on the winControl", ->
-                el.winControl.addEventListener.should.have.been.called
+            it "should forward iteminvoked events to the specified view model method", ->
+                trigger(1, 2, 3)
 
-            it "should callback the `iteminvoked` event listener", ->
-                viewModel.onItemInvoked.should.have.been.calledWith(el.winControl)
+                viewModel.onItemInvoked.should.have.been.calledWith(el.winControl, 1, 2, 3)
+
+        describe "and the element does not own a winControl", ->
+            it "should throw an informative error", ->
+                (-> ko.applyBindings(viewModel, el)).should.throw("does not own a winControl")
 
     describe "component", ->
         parent = null
