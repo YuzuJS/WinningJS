@@ -8,17 +8,19 @@ Windows =
         ActivationKind: launch: {}
         ApplicationExecutionState: terminated: {}
 
-requireApp = (winJS = {}) ->
-    winJS.Application ?= start: ->
-    winJS.UI ?= processAll: ->
-    winJS.UI._ElementsPool = prototype: {}
-    winJS.UI.ListView = prototype: {}
+requireApp = (WinJS = {}) ->
+    WinJS.Application ?= start: ->
+    WinJS.UI ?= processAll: ->
 
     applicationEE = new EventEmitter()
-    winJS.Application.addEventListener = applicationEE.on.bind(applicationEE)
-    winJS.Application.dispatchEvent = applicationEE.emit.bind(applicationEE)
+    WinJS.Application.addEventListener = applicationEE.on.bind(applicationEE)
+    WinJS.Application.dispatchEvent = applicationEE.emit.bind(applicationEE)
 
-    sandboxedModule.require("../lib/app", globals: { WinJS: winJS, Windows: Windows })
+    sandboxedModule.require(
+        "../lib/app"
+        globals: { WinJS, Windows }
+        requires: { "./patches": {} }
+    )
 
 describe "app", ->
     it "should call `WinJS.Application.start()`", ->
