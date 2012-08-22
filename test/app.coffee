@@ -8,9 +8,10 @@ Windows =
         ActivationKind: launch: {}
         ApplicationExecutionState: terminated: {}
 
-requireApp = (WinJS = {}) ->
+requireApp = (WinJS = {}, patches = {}) ->
     WinJS.Application ?= start: ->
     WinJS.UI ?= processAll: ->
+    WinJS.Binding ?= {}
 
     applicationEE = new EventEmitter()
     WinJS.Application.addEventListener = applicationEE.on.bind(applicationEE)
@@ -19,7 +20,7 @@ requireApp = (WinJS = {}) ->
     sandboxedModule.require(
         "../lib/app"
         globals: { WinJS, Windows }
-        requires: { "./patches": {} }
+        requires: { "./patches": patches }
     )
 
 describe "app", ->
@@ -29,22 +30,38 @@ describe "app", ->
 
         stubWinJS.Application.start.should.have.been.calledOnce
 
+    it "should set `WinJS.Binding.optimizeBindingReferences` to `true`", ->
+        stubWinJS = {}
+        requireApp(stubWinJS).start()
+
+        stubWinJS.Binding.optimizeBindingReferences.should.equal(true)
+
+    it "should execute all patches", ->
+        patches = { patch1: sinon.spy(), patch2: sinon.spy() }
+        requireApp(undefined, patches).start()
+
+        patches.patch1.should.have.been.called
+        patches.patch2.should.have.been.called
+
     describe "when an 'activated' event is triggered with kind 'launch'", ->
         beforeEach ->
-            @eventObject = detail: kind: Windows.ApplicationModel.Activation.ActivationKind.launch
+            @args =
+                detail: kind: Windows.ApplicationModel.Activation.ActivationKind.launch
+                setPromise: sinon.spy()
 
-        it "should call `WinJS.UI.processAll()`", ->
-            stubWinJS = UI: processAll: sinon.spy()
-            app = requireApp(stubWinJS)
-            app.start()
+        it "should call `WinJS.UI.processAll` and pass the result to `args.setPromise`", ->
+            processAllResult = {}
+            stubWinJS = UI: processAll: sinon.stub().returns(processAllResult)
+            requireApp(stubWinJS).start()
 
-            stubWinJS.Application.dispatchEvent("activated", @eventObject)
+            stubWinJS.Application.dispatchEvent("activated", @args)
 
             stubWinJS.UI.processAll.should.have.been.calledOnce
+            @args.setPromise.should.have.been.calledWith(sinon.match.same(processAllResult))
 
         describe "when the previous execution state is not 'terminated'", ->
             beforeEach ->
-                @eventObject.detail.previousExecutionState = {}
+                @args.detail.previousExecutionState = {}
 
             it "should publish a 'launch' event", ->
                 stubWinJS = {}
@@ -54,13 +71,13 @@ describe "app", ->
                 spy = sinon.spy()
                 app.on("launch", spy)
 
-                stubWinJS.Application.dispatchEvent("activated", @eventObject)
+                stubWinJS.Application.dispatchEvent("activated", @args)
 
-                spy.should.have.been.calledWith(@eventObject)
+                spy.should.have.been.calledWith(@args)
 
         describe "when the previous execution state is 'terminated'", ->
             beforeEach ->
-                @eventObject.detail.previousExecutionState =
+                @args.detail.previousExecutionState =
                     Windows.ApplicationModel.Activation.ApplicationExecutionState.terminated
 
             it "should publish a 'reactivate' event", ->
@@ -71,9 +88,9 @@ describe "app", ->
                 spy = sinon.spy()
                 app.on("reactivate", spy)
 
-                stubWinJS.Application.dispatchEvent("activated", @eventObject)
+                stubWinJS.Application.dispatchEvent("activated", @args)
 
-                spy.should.have.been.calledWith(@eventObject)
+                spy.should.have.been.calledWith(@args)
 
     describe "when the 'checkpoint' event is triggered", ->
         it "should publish a 'beforeSuspend' event", ->
