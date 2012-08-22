@@ -52,17 +52,14 @@ describe "Knockout custom bindings", ->
                 (-> ko.applyBindings(viewModel, el)).should.throw("does not own a winControl")
 
     describe "component", ->
-        parent = null
         el = null
         viewModel = null
         componentProcessPromise = null
 
         beforeEach ->
-            parent = document.createElement("div")
-            el = $('<div data-bind="component: theComponent">Test</div>')[0]
-            parent.appendChild(el)
+            el = $('<div><!-- ko component: theComponent -->Test<!-- /ko --></div>')[0]
 
-            componentEl = $('<div>Component One</div>')[0]
+            componentEl = $('<section>Component One</section>')[0]
             componentProcessPromise = Q.resolve(componentEl)
             viewModel =
                 theComponent:
@@ -70,18 +67,16 @@ describe "Knockout custom bindings", ->
                     process: sinon.stub().returns(componentProcessPromise)
                     onWinControlAvailable: sinon.spy()
 
-        describe "and we have rendered components", ->
-            beforeEach ->
-                ko.applyBindings(viewModel, el)
+            ko.applyBindings(viewModel, el)
 
-            it "should call component's `render` and `process` methods", ->
-                viewModel.theComponent.render.should.have.beenCalled
-                viewModel.theComponent.process.should.have.beenCalled
+        it "should call component's `render` and `process` methods", ->
+            viewModel.theComponent.render.should.have.beenCalled
+            viewModel.theComponent.process.should.have.beenCalled
 
-            it "should call `onWinControlAvailable` on the component if available", ->
-                componentProcessPromise.then ->
-                    viewModel.theComponent.onWinControlAvailable.should.have.been.called
+        it "should call `onWinControlAvailable` on the component (when present)", ->
+            componentProcessPromise.then ->
+                viewModel.theComponent.onWinControlAvailable.should.have.been.called
 
-            it "should replace the placeholder element with the component's element", ->
-                parent.innerHTML.should.equal('<div>Component One</div>')
+        it "should set the element's contents to the rendered component", ->
+            el.innerHTML.should.equal('<!-- ko component: theComponent --><section>Component One</section><!-- /ko -->')
 
