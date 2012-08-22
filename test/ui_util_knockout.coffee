@@ -1,6 +1,7 @@
 "use strict"
 
 Q = require("q")
+_ = require("underscore")
 EventEmitter = require("events").EventEmitter
 
 { $, document, ko, koUtils } = do ->
@@ -30,7 +31,6 @@ describe "Knockout custom bindings", ->
         describe "and the element owns a winControl", ->
             beforeEach ->
                 ee = new EventEmitter()
-
                 @el.winControl = addEventListener: ee.on.bind(ee)
                 @trigger = (args...) => ee.emit("iteminvoked", args...)
 
@@ -79,3 +79,29 @@ describe "Knockout custom bindings", ->
                     some data from a different rendering process
                 """
             )
+
+    describe "voreach", ->
+        beforeEach ->
+            @el = $('<div><!-- ko voreach: theVector --><li data-bind="text: $data"></li><!-- /ko --></div>')[0]
+
+            @vector = [1, 2]
+
+            ee = new EventEmitter()
+            @vector.addEventListener = ee.on.bind(ee)
+            @trigger = => ee.emit("vectorchanged")
+
+            @viewModel = theVector: @vector
+            ko.applyBindings(@viewModel, @el)
+
+        it "should bind to the initial elements of the vector", ->
+            $lis = $(@el).find("li")
+            expect($lis).to.have.length(2)
+            _.pluck($lis, "textContent").should.deep.equal(["1", "2"])
+
+        it "should react to vectorchanged events", ->
+            @vector.push(3)
+            @trigger()
+
+            $lis = $(@el).find("li")
+            expect($lis).to.have.length(3)
+            _.pluck($lis, "textContent").should.deep.equal(["1", "2", "3"])
