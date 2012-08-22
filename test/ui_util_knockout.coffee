@@ -1,7 +1,7 @@
 "use strict"
 
 Q = require("q")
-makeEmitter = require("pubit").makeEmitter
+EventEmitter = require("events").EventEmitter
 
 { $, document, ko, koUtils } = do ->
     jsdom = require("jsdom").jsdom
@@ -12,7 +12,6 @@ makeEmitter = require("pubit").makeEmitter
         window: window
         document: window.document
         navigator: window.navigator
-        Error: Error # necessary for `instanceof Error` checks :-/
 
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
     ko = sandboxedModule.require("knockoutify", globals: globals)
@@ -20,100 +19,56 @@ makeEmitter = require("pubit").makeEmitter
 
     return { $, document: window.document, ko, koUtils }
 
-describe "Using the knockout util", ->
+describe "Knockout custom bindings", ->
+    beforeEach -> koUtils.addBindings()
 
-    describe "observable helper", ->
-        obj = null
-
+    describe "itemInvoked", ->
         beforeEach ->
-           obj = prop: "hello"
+            @el = $('<div data-bind="itemInvoked: onItemInvoked">Test</div>')[0]
+            @viewModel = onItemInvoked: sinon.spy()
 
-        describe "observableFromProperty", ->
-            observable = null
-
+        describe "and the element owns a winControl", ->
             beforeEach ->
-                observable = koUtils.observableFromProperty(obj, "prop")
+                ee = new EventEmitter()
 
-            it "should create an observable with the correct initial value", ->
-                observable().should.equal("hello")
+                @el.winControl = addEventListener: ee.on.bind(ee)
+                @trigger = (args...) => ee.emit("iteminvoked", args...)
 
-            it "should update the property when the observable is updated", ->
-                observable("hi there")
-                obj.prop.should.equal("hi there")
+                ko.applyBindings(@viewModel, @el)
 
-        describe "observableFromChangingProperty", ->
-            observable = null
-            publish = null
+            it "should forward iteminvoked events to the specified view model method", ->
+                @trigger(1, 2, 3)
 
-            beforeEach ->
-                publish = makeEmitter(obj, events: ["propChange"])
-                observable = koUtils.observableFromChangingProperty(obj, "prop")
+                @viewModel.onItemInvoked.should.have.been.calledWith(@el.winControl, 1, 2, 3)
 
-            it "should create an observable with the correct initial value", ->
-                observable().should.equal("hello")
+        describe "and the element does not own a winControl", ->
+            it "should throw an informative error", ->
+                (=> ko.applyBindings(@viewModel, @el)).should.throw("does not own a winControl")
 
-            it "should update the property when updating the observable", ->
-                observable("hi there")
-                obj.prop.should.equal("hi there")
-
-            it "should update the observable when the corresponding change event is published", ->
-                publish("propChange", "hi there")
-                observable().should.equal("hi there")
-
-    describe "addBindings", ->
+    describe "component", ->
         beforeEach ->
-            koUtils.addBindings()
+            @el = $('<div><!-- ko component: theComponent -->Test<!-- /ko --></div>')[0]
 
-        describe "when the custom binding `itemInvoked` is present in the markup", ->
-            el = null
-            viewModel = null
+            componentEl = $('<section>Component One</section>')[0]
+            @componentProcessPromise = Q.resolve(componentEl)
+            @viewModel =
+                theComponent:
+                    render: sinon.stub().returns(componentEl)
+                    process: sinon.stub().returns(@componentProcessPromise)
+                    onWinControlAvailable: sinon.spy()
 
-            beforeEach ->
-                el = $('<div data-bind="itemInvoked: onItemInvoked">Test</div>')[0]
-                viewModel = onItemInvoked: sinon.stub()
+            ko.applyBindings(@viewModel, @el)
 
-            describe "and the element owns a winControl", ->
-                beforeEach ->
-                    el.winControl = addEventListener: sinon.stub()
-                    el.winControl.addEventListener.callsArgWith(1, el.winControl)
-                    ko.applyBindings(viewModel, el)
+        it "should call component's `render` and `process` methods", ->
+            @viewModel.theComponent.render.should.have.beenCalled
+            @viewModel.theComponent.process.should.have.beenCalled
 
-                it "should call `addEventListener` on the winControl", ->
-                    el.winControl.addEventListener.should.have.been.called
+        it "should call `onWinControlAvailable` on the component (when present)", ->
+            @componentProcessPromise.then =>
+                @viewModel.theComponent.onWinControlAvailable.should.have.been.called
 
-                it "should callback the `iteminvoked` event listener", ->
-                    viewModel.onItemInvoked.should.have.been.calledWith(el.winControl)
+        it "should set the element's contents to the rendered component", ->
+            @el.innerHTML.should.equal(
+                '<!-- ko component: theComponent --><section>Component One</section><!-- /ko -->'
+            )
 
-        describe "when the custom binding `component` is present in the markup", ->
-            parent = null
-            el = null
-            viewModel = null
-            componentProcessPromise = null
-
-            beforeEach ->
-                parent = document.createElement("div")
-                el = $('<div data-bind="component: theComponent">Test</div>')[0]
-                parent.appendChild(el)
-
-                componentEl = $('<div>Component One</div>')[0]
-                componentProcessPromise = Q.resolve(componentEl)
-                viewModel =
-                    theComponent:
-                        render: sinon.stub().returns(componentEl)
-                        process: sinon.stub().returns(componentProcessPromise)
-                        onWinControlAvailable: sinon.spy()
-
-            describe "and we have rendered components", ->
-                beforeEach ->
-                    ko.applyBindings(viewModel, el)
-
-                it "should call component's `render` and `process` methods", ->
-                    viewModel.theComponent.render.should.have.beenCalled
-                    viewModel.theComponent.process.should.have.beenCalled
-
-                it "should call `onWinControlAvailable` on the component if available", ->
-                    componentProcessPromise.then ->
-                        viewModel.theComponent.onWinControlAvailable.should.have.been.called
-
-                it "should replace the placeholder element with the component's element", ->
-                    parent.innerHTML.should.equal('<div>Component One</div>')
