@@ -47,9 +47,14 @@ describe "Knockout custom bindings", ->
 
     describe "component", ->
         beforeEach ->
-            @el = $('<div><!-- ko component: theComponent -->Test<!-- /ko --></div>')[0]
+            @el = $("<div><!-- ko component: theComponent --><!-- /ko --></div>")[0]
 
-            componentEl = $('<section>Component One</section>')[0]
+            componentEl = $("""
+                            <section>
+                                Component One
+                                <span data-bind="text: theData">some data from a different rendering process</span>
+                            </section>
+                            """)[0]
             @componentProcessPromise = Q.resolve(componentEl)
             @viewModel =
                 theComponent:
@@ -68,7 +73,9 @@ describe "Knockout custom bindings", ->
                 @viewModel.theComponent.onWinControlAvailable.should.have.been.called
 
         it "should set the element's contents to the rendered component", ->
-            @el.innerHTML.should.equal(
-                '<!-- ko component: theComponent --><section>Component One</section><!-- /ko -->'
+            @el.querySelector("section").textContent.trim().should.equal(
+                """
+                Component One
+                    some data from a different rendering process
+                """
             )
-
