@@ -4,6 +4,12 @@ Q = require("q")
 _ = require("underscore")
 EventEmitter = require("events").EventEmitter
 
+Windows = Foundation: Collections: CollectionChange:
+    reset: 0
+    itemInserted: 1
+    itemRemoved: 2
+    itemChanged: 3
+
 { $, document, ko, koUtils } = do ->
     jsdom = require("jsdom").jsdom
     sandboxedModule = require("sandboxed-module")
@@ -13,12 +19,94 @@ EventEmitter = require("events").EventEmitter
         window: window
         document: window.document
         navigator: window.navigator
+        Windows: Windows
 
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
     ko = sandboxedModule.require("knockoutify", globals: globals)
     koUtils = sandboxedModule.require("../lib/ui/util/knockout", globals: globals, requires: knockoutify: ko)
 
     return { $, document: window.document, ko, koUtils }
+
+describe "observableArrayFromVector", ->
+    { CollectionChange } = Windows.Foundation.Collections
+    mapping = sinon.spy (x) => 11 * x
+
+    beforeEach ->
+        @vector = []
+
+        ee = new EventEmitter()
+        @vector.addEventListener = ee.on.bind(ee)
+        @trigger = (args...) => ee.emit("vectorchanged", args...)
+
+    it "should fill the observable array with the initial elements of the vector, mapped", ->
+        @vector.push(1, 2, 3)
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        array().should.deep.equal([11, 22, 33])
+
+    it "should not pass the index to the mapper", ->
+        # This test ensures that the mapping function doesn't get called with an index, like a normal callback to
+        # `Array.prototype.map` would. See explanation in the source.
+
+        @vector.push(1, 2, 3)
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        mapping.should.have.been.calledWithExactly(1)
+        mapping.should.have.been.calledWithExactly(2)
+        mapping.should.have.been.calledWithExactly(3)
+
+    it "should reflect vectorchanged reset events", ->
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        array().should.deep.equal([])
+
+        @vector.push(1, 2, 3)
+        @trigger(collectionChange: CollectionChange.reset)
+
+        array().should.deep.equal([11, 22, 33])
+
+    it "should reflect vectorchanged itemInserted events", ->
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        array().should.deep.equal([])
+
+        @vector.push(1)
+        @trigger(collectionChange: CollectionChange.itemInserted, index: 0)
+
+        array().should.deep.equal([11])
+
+        @vector.push(2)
+        @trigger(collectionChange: CollectionChange.itemInserted, index: 1)
+
+        array().should.deep.equal([11, 22])
+
+    it "should reflect vectorchanged itemRemoved events", ->
+        @vector.push(1, 2, 3)
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        array().should.deep.equal([11, 22, 33])
+
+        @vector.splice(1, 1)
+        @trigger(collectionChange: CollectionChange.itemRemoved, index: 1)
+
+        array().should.deep.equal([11, 33])
+
+        @vector.shift()
+        @trigger(collectionChange: CollectionChange.itemRemoved, index: 0)
+
+        array().should.deep.equal([33])
+
+    it "should reflect vectorchanged itemChanged events", ->
+        @vector.push(1, 2, 3)
+        array = koUtils.observableArrayFromVector(@vector, mapping)
+
+        array().should.deep.equal([11, 22, 33])
+
+        @vector[1] = 5
+        @trigger(collectionChange: CollectionChange.itemChanged, index: 1)
+
+        array().should.deep.equal([11, 55, 33])
+
 
 describe "Knockout custom bindings", ->
     beforeEach -> koUtils.addBindings()
