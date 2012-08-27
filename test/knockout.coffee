@@ -23,7 +23,7 @@ Windows = Foundation: Collections: CollectionChange:
 
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
     ko = sandboxedModule.require("knockoutify", globals: globals)
-    koUtils = sandboxedModule.require("../lib/ui/util/knockout", globals: globals, requires: knockoutify: ko)
+    koUtils = sandboxedModule.require("../lib/knockout", globals: globals, requires: knockoutify: ko)
 
     return { $, document: window.document, ko, koUtils }
 
