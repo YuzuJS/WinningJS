@@ -148,17 +148,12 @@ describe "Knockout custom bindings", ->
                 theComponent:
                     render: sinon.stub().returns(componentEl)
                     process: sinon.stub().returns(@componentProcessPromise)
-                    onWinControlAvailable: sinon.spy()
 
             ko.applyBindings(@viewModel, @el)
 
         it "should call component's `render` and `process` methods", ->
             @viewModel.theComponent.render.should.have.beenCalled
             @viewModel.theComponent.process.should.have.beenCalled
-
-        it "should call `onWinControlAvailable` on the component (when present)", ->
-            @componentProcessPromise.then =>
-                @viewModel.theComponent.onWinControlAvailable.should.have.been.called
 
         it "should set the element's contents to the rendered component", ->
             @el.querySelector("section").textContent.trim().should.equal(
