@@ -152,8 +152,8 @@ describe "Knockout custom bindings", ->
             ko.applyBindings(@viewModel, @el)
 
         it "should call component's `render` and `process` methods", ->
-            @viewModel.theComponent.render.should.have.beenCalled
-            @viewModel.theComponent.process.should.have.beenCalled
+            @viewModel.theComponent.render.should.have.been.called
+            @viewModel.theComponent.process.should.have.been.called
 
         it "should set the element's contents to the rendered component", ->
             @el.querySelector("section").textContent.trim().should.equal(
