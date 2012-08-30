@@ -20,7 +20,7 @@
     },
     "scripts": {
         "test": "mocha",
-        "lint": "jshint lib --show-non-errors"
+        "lint": "jshint lib"
     },
     "dependencies": {
         "domify": "git://github.com/domenic/domify.git#better",
