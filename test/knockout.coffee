@@ -107,6 +107,59 @@ describe "observableArrayFromVector", ->
 
         array().should.deep.equal([11, 55, 33])
 
+describe "observableFromMapItem", ->
+    { CollectionChange } = Windows.Foundation.Collections
+
+    beforeEach ->
+        ee = new EventEmitter()
+        @map = { key: "value" }
+
+        @map.addEventListener = ee.on.bind(ee)
+        @trigger = (args...) => ee.emit("mapchanged", args...)
+
+    it "should return an observable, prepopulated with value of the item", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+        observable().should.equal("value")
+
+    it "should automatically update the observable when the item's value has changed", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+
+        @map.key = "new-value"
+        @trigger(collectionChange: CollectionChange.itemChanged, key: "key")
+
+        observable().should.equal("new-value")
+
+    it "should NOT alter the observable if another key has changed", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+
+        @map.key = "new-value"
+        @trigger(collectionChange: CollectionChange.itemChanged, key: "another-key")
+
+        observable().should.equal("value")
+
+    it "should NOT alter the observable on 'itemInserted'", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+        
+        @map.key = "new-value"
+        @trigger(collectionChange: CollectionChange.itemInserted, key: "key")
+
+        observable().should.equal("value")
+
+    it "should NOT alter the observable on 'reset'", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+
+        @map.key = "new-value"
+        @trigger(collectionChange: CollectionChange.reset, key: "key")
+
+        observable().should.equal("value")
+
+    it "should NOT alter the observable on 'itemRemoved'", ->
+        observable = koUtils.observableFromMapItem(@map, "key")
+        
+        @map.key = "new-value"
+        @trigger(collectionChange: CollectionChange.itemRemoved, key: "key")
+
+        observable().should.equal("value")
 
 describe "Knockout custom bindings", ->
     beforeEach -> koUtils.addBindings()
