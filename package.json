@@ -25,7 +25,7 @@
     "dependencies": {
         "domify": "git://github.com/domenic/domify.git#better",
         "jquery-browserify": ">= 1.7.2",
-        "knockoutify": "git://github.com/guillaume86/knockoutify.git",
+        "knockoutify": "git://github.com/domenic/knockoutify.git",
         "pubit": ">= 1.2.1",
         "q": ">= 0.8.5",
         "underscore": ">= 1.3.3",
