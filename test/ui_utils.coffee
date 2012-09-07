@@ -37,3 +37,18 @@ describe "UI utilities", ->
 
             expect(constructionOptions).to.have.property("groupInfo").that.is.a("function")
             expect(constructionOptions.groupInfo()).to.deep.equal(enableCellSpanning: true, cellWidth: 1, cellHeight: 1)
+
+    describe "createGridLayout", ->
+        beforeEach ->
+            @customGridLayoutConstructed = {}
+            WinJS.UI = GridLayout: sinon.stub().returns(@customGridLayoutConstructed)
+
+        it "should return a `WinJS.UI.GridLayout` instance created with specified width and height", ->
+            result = uiUtils.createGridLayout(200, 250)
+            constructionOptions = WinJS.UI.GridLayout.args[0][0]
+
+            result.should.equal(@customGridLayoutConstructed)
+
+            expect(constructionOptions).to.have.property("groupInfo").that.is.a("function")
+            expect(constructionOptions.groupInfo())
+                .to.deep.equal(enableCellSpanning: true, cellWidth: 200, cellHeight: 250)
