@@ -23,7 +23,8 @@ Windows = Foundation: Collections: CollectionChange:
 
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
     ko = sandboxedModule.require("knockoutify", globals: globals)
-    koUtils = sandboxedModule.require("../lib/knockout", globals: globals, requires: knockoutify: ko)
+    koRequires = knockoutify: ko, "jquery-browserify": $
+    koUtils = sandboxedModule.require("../lib/knockout", globals: globals, requires: koRequires)
 
     return { $, document: window.document, ko, koUtils }
 
@@ -185,6 +186,22 @@ describe "Knockout custom bindings", ->
         describe "and the element does not own a winControl", ->
             it "should throw an informative error", ->
                 (=> ko.applyBindings(@viewModel, @el)).should.throw("does not own a winControl")
+    
+    describe "variableClass", ->
+        beforeEach ->
+            @$el = $('<div data-bind="variableClass: getVariableClass">Variable Test</div>')
+            @status = ko.observable("loading")
+            @viewModel = getVariableClass: ko.computed(=> @status())
+            ko.applyBindings(@viewModel, @$el[0])
+
+        it "should set the class based on the return of the bounded method", ->
+            @$el.hasClass("loading").should.be.true
+            @status("ready")
+            @$el.hasClass("ready").should.be.true
+
+        it "should not set a class if the bounded method returns a falsy value", ->
+            @status("")
+            @$el[0].hasAttribute("class").should.be.false
 
     describe "component", ->
         beforeEach ->
