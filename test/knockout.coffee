@@ -39,74 +39,134 @@ describe "observableArrayFromVector", ->
         @vector.addEventListener = ee.on.bind(ee)
         @trigger = (args...) => ee.emit("vectorchanged", args...)
 
-    it "should fill the observable array with the initial elements of the vector, mapped", ->
-        @vector.push(1, 2, 3)
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+    describe "without a mapping", ->
+        it "should fill the observable array with the initial elements of the vector", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector)
 
-        array().should.deep.equal([11, 22, 33])
+            array().should.deep.equal([1, 2, 3])
 
-    it "should not pass the index to the mapper", ->
-        # This test ensures that the mapping function doesn't get called with an index, like a normal callback to
-        # `Array.prototype.map` would. See explanation in the source.
+        it "should reflect vectorchanged reset events", ->
+            array = koUtils.observableArrayFromVector(@vector)
 
-        @vector.push(1, 2, 3)
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+            array().should.deep.equal([])
 
-        mapping.should.have.been.calledWithExactly(1)
-        mapping.should.have.been.calledWithExactly(2)
-        mapping.should.have.been.calledWithExactly(3)
+            @vector.push(1, 2, 3)
+            @trigger(collectionChange: CollectionChange.reset)
 
-    it "should reflect vectorchanged reset events", ->
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+            array().should.deep.equal([1, 2, 3])
 
-        array().should.deep.equal([])
+        it "should reflect vectorchanged itemInserted events", ->
+            array = koUtils.observableArrayFromVector(@vector)
 
-        @vector.push(1, 2, 3)
-        @trigger(collectionChange: CollectionChange.reset)
+            array().should.deep.equal([])
 
-        array().should.deep.equal([11, 22, 33])
+            @vector.push(1)
+            @trigger(collectionChange: CollectionChange.itemInserted, index: 0)
 
-    it "should reflect vectorchanged itemInserted events", ->
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+            array().should.deep.equal([1])
 
-        array().should.deep.equal([])
+            @vector.push(2)
+            @trigger(collectionChange: CollectionChange.itemInserted, index: 1)
 
-        @vector.push(1)
-        @trigger(collectionChange: CollectionChange.itemInserted, index: 0)
+            array().should.deep.equal([1, 2])
 
-        array().should.deep.equal([11])
+        it "should reflect vectorchanged itemRemoved events", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector)
 
-        @vector.push(2)
-        @trigger(collectionChange: CollectionChange.itemInserted, index: 1)
+            array().should.deep.equal([1, 2, 3])
 
-        array().should.deep.equal([11, 22])
+            @vector.splice(1, 1)
+            @trigger(collectionChange: CollectionChange.itemRemoved, index: 1)
 
-    it "should reflect vectorchanged itemRemoved events", ->
-        @vector.push(1, 2, 3)
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+            array().should.deep.equal([1, 3])
 
-        array().should.deep.equal([11, 22, 33])
+            @vector.shift()
+            @trigger(collectionChange: CollectionChange.itemRemoved, index: 0)
 
-        @vector.splice(1, 1)
-        @trigger(collectionChange: CollectionChange.itemRemoved, index: 1)
+            array().should.deep.equal([3])
 
-        array().should.deep.equal([11, 33])
+        it "should reflect vectorchanged itemChanged events", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector)
 
-        @vector.shift()
-        @trigger(collectionChange: CollectionChange.itemRemoved, index: 0)
+            array().should.deep.equal([1, 2, 3])
 
-        array().should.deep.equal([33])
+            @vector[1] = 5
+            @trigger(collectionChange: CollectionChange.itemChanged, index: 1)
 
-    it "should reflect vectorchanged itemChanged events", ->
-        @vector.push(1, 2, 3)
-        array = koUtils.observableArrayFromVector(@vector, mapping)
+            array().should.deep.equal([1, 5, 3])
 
-        array().should.deep.equal([11, 22, 33])
+    describe "with a mapping", ->
+        it "should fill the observable array with the initial elements of the vector, mapped", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector, mapping)
 
-        @vector[1] = 5
-        @trigger(collectionChange: CollectionChange.itemChanged, index: 1)
+            array().should.deep.equal([11, 22, 33])
 
-        array().should.deep.equal([11, 55, 33])
+        it "should not pass the index to the mapper", ->
+            # This test ensures that the mapping function doesn't get called with an index, like a normal callback to
+            # `Array.prototype.map` would. See explanation in the source.
+
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector, mapping)
+
+            mapping.should.have.been.calledWithExactly(1)
+            mapping.should.have.been.calledWithExactly(2)
+            mapping.should.have.been.calledWithExactly(3)
+
+        it "should reflect vectorchanged reset events", ->
+            array = koUtils.observableArrayFromVector(@vector, mapping)
+
+            array().should.deep.equal([])
+
+            @vector.push(1, 2, 3)
+            @trigger(collectionChange: CollectionChange.reset)
+
+            array().should.deep.equal([11, 22, 33])
+
+        it "should reflect vectorchanged itemInserted events", ->
+            array = koUtils.observableArrayFromVector(@vector, mapping)
+
+            array().should.deep.equal([])
+
+            @vector.push(1)
+            @trigger(collectionChange: CollectionChange.itemInserted, index: 0)
+
+            array().should.deep.equal([11])
+
+            @vector.push(2)
+            @trigger(collectionChange: CollectionChange.itemInserted, index: 1)
+
+            array().should.deep.equal([11, 22])
+
+        it "should reflect vectorchanged itemRemoved events", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector, mapping)
+
+            array().should.deep.equal([11, 22, 33])
+
+            @vector.splice(1, 1)
+            @trigger(collectionChange: CollectionChange.itemRemoved, index: 1)
+
+            array().should.deep.equal([11, 33])
+
+            @vector.shift()
+            @trigger(collectionChange: CollectionChange.itemRemoved, index: 0)
+
+            array().should.deep.equal([33])
+
+        it "should reflect vectorchanged itemChanged events", ->
+            @vector.push(1, 2, 3)
+            array = koUtils.observableArrayFromVector(@vector, mapping)
+
+            array().should.deep.equal([11, 22, 33])
+
+            @vector[1] = 5
+            @trigger(collectionChange: CollectionChange.itemChanged, index: 1)
+
+            array().should.deep.equal([11, 55, 33])
 
 describe "observableFromMapItem", ->
     { CollectionChange } = Windows.Foundation.Collections
@@ -140,7 +200,7 @@ describe "observableFromMapItem", ->
 
     it "should NOT alter the observable on 'itemInserted'", ->
         observable = koUtils.observableFromMapItem(@map, "key")
-        
+
         @map.key = "new-value"
         @trigger(collectionChange: CollectionChange.itemInserted, key: "key")
 
@@ -156,7 +216,7 @@ describe "observableFromMapItem", ->
 
     it "should NOT alter the observable on 'itemRemoved'", ->
         observable = koUtils.observableFromMapItem(@map, "key")
-        
+
         @map.key = "new-value"
         @trigger(collectionChange: CollectionChange.itemRemoved, key: "key")
 
