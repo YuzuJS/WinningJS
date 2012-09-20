@@ -1,12 +1,26 @@
 "use strict"
 
+jsdom = require("jsdom").jsdom
 sandboxedModule = require("sandboxed-module")
+s = require("../lib/resources").s
 
-[WinJS, Windows, uiUtils] = [null, null, null]
+[window, WinJS, Windows, MSApp, uiUtils] = [null, null, null, null]
 
 beforeEach ->
-    [WinJS, Windows] = [{}, {}]
-    uiUtils = sandboxedModule.require("../lib/ui/utils", globals: { WinJS, Windows })
+    window = jsdom(null, null, features: QuerySelector: true).createWindow()
+    [WinJS, Windows, MSApp] = [{}, {}, { execUnsafeLocalFunction: (f) -> f() }]
+
+    globals =
+        window: window
+        document: window.document
+        WinJS: WinJS
+        Windows: Windows
+        MSApp: MSApp
+    requires =
+        domify: sandboxedModule.require("domify/lib/domify", { globals })
+        "../resources": require("../lib/resources")
+
+    uiUtils = sandboxedModule.require("../lib/ui/utils", { globals, requires })
 
 describe "UI utilities", ->
     describe "scaleLength", ->
@@ -52,3 +66,17 @@ describe "UI utilities", ->
             expect(constructionOptions).to.have.property("groupInfo").that.is.a("function")
             expect(constructionOptions.groupInfo())
                 .to.deep.equal(enableCellSpanning: true, cellWidth: 200, cellHeight: 250)
+
+    describe "getElementFromTemplate", ->
+        it "should return the element resulting from executing the template", ->
+            element = uiUtils.getElementFromTemplate(-> "<section><h1>Stuff</h1><p>text</p></section>")
+
+            element.tagName.should.equal("SECTION")
+            element.querySelector("h1").textContent.should.equal("Stuff")
+            element.querySelector("p").textContent.should.equal("text")
+
+        it "should pass the `s` resource-string function to the template", ->
+            template = sinon.stub().returns("<section></section>")
+            uiUtils.getElementFromTemplate(template)
+
+            template.should.have.been.calledWith(s: s)
