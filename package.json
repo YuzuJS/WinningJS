@@ -23,7 +23,7 @@
         "lint": "jshint lib"
     },
     "dependencies": {
-        "domify": "git://github.com/domenic/domify.git#better",
+        "domify": ">= 0.0.3",
         "jquery-browserify": ">= 1.7.2",
         "knockoutify": "git://github.com/domenic/knockoutify.git",
         "pubit": ">= 1.2.1",
@@ -45,7 +45,6 @@
         "sinon-chai": ">= 2.1.2"
     },
     "_dependencyComments": {
-        "domify": "Need https://github.com/component/domify/pull/3 and https://github.com/component/domify/pull/4",
-        "knockoutify": "Need version 2.1.0; the npm version is 2.0.0."
+        "knockoutify": "Need bugfixes post 2.1.0, so use my fork which is based off Knockout master."
     }
 }
