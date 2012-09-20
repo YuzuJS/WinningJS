@@ -19,10 +19,12 @@ Presenter = do ->
         WinJS: WinJS
         MSApp: execUnsafeLocalFunction: (f) -> f()
         Error: Error # necessary for `instanceof Error` checks :-/
+    utilsRequires =
+        "../resources": require("../lib/resources")
+        domify: sandboxedModule.require("domify/lib/domify", { globals })
     requires =
         knockoutify: ko
-        domify: sandboxedModule.require("domify/lib/domify", { globals })
-        "../resources": require("../lib/resources")
+        "./utils": sandboxedModule.require("../lib/ui/utils", { globals, requires: utilsRequires })
         "jquery-browserify": $
 
     sandboxedModule.require("../lib/ui/Presenter", { globals, requires })
