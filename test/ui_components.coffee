@@ -157,17 +157,15 @@ describe "UI components utility", ->
 
 
     describe "mixing in showable capabilities", ->
-        [elementDeferred, presenter, target] = [null, null, null]
+        [presenter, target] = [null, null]
 
         beforeEach ->
-            elementDeferred = Q.defer()
-            presenter = element: elementDeferred.promise
-
+            presenter = { element: document.createElement("div") }
             target = {}
+
             components.mixinShowable(target, presenter)
 
         it "should put `show` and `hide` methods on the target", ->
-
             target.should.respondTo("show")
             target.should.respondTo("hide")
 
@@ -175,28 +173,14 @@ describe "UI components utility", ->
             beforeEach -> sinon.stub($.fn, "show")
             afterEach -> $.fn.show.restore()
 
-            it "should do nothing until the element promise is resolved, but then show the element", ->
+            it "should use jQuery to show the target", ->
                 target.show()
-
-                $.fn.show.should.not.have.been.called
-
-                element = {}
-                Q.delay(0).then -> elementDeferred.resolve(element)
-
-                elementDeferred.promise.then ->
-                    expect($.fn.show.thisValues[0]).to.have.property("0", element)
+                expect($.fn.show.thisValues[0]).to.have.property("0", presenter.element)
 
         describe "The `hide` method", ->
             beforeEach -> sinon.stub($.fn, "hide")
             afterEach -> $.fn.hide.restore()
 
-            it "should do nothing until the element promise is resolved, but then hide the element", ->
+            it "should use jQuery to show the target", ->
                 target.hide()
-
-                $.fn.hide.should.not.have.been.called
-
-                element = {}
-                Q.delay(0).then -> elementDeferred.resolve(element)
-
-                elementDeferred.promise.then ->
-                    expect($.fn.hide.thisValues[0]).to.have.property("0", element)
+                expect($.fn.hide.thisValues[0]).to.have.property("0", presenter.element)
