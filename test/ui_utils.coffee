@@ -17,7 +17,7 @@ beforeEach ->
         Windows: Windows
         MSApp: MSApp
     requires =
-        domify: sandboxedModule.require("domify/lib/domify", { globals })
+        domify: sandboxedModule.require("domify", { globals })
         "../resources": require("../lib/resources")
 
     uiUtils = sandboxedModule.require("../lib/ui/utils", { globals, requires })

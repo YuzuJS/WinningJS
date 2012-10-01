@@ -21,7 +21,7 @@ Presenter = do ->
         Error: Error # necessary for `instanceof Error` checks :-/
     utilsRequires =
         "../resources": require("../lib/resources")
-        domify: sandboxedModule.require("domify/lib/domify", { globals })
+        domify: sandboxedModule.require("domify", { globals })
     requires =
         knockoutify: ko
         "./utils": sandboxedModule.require("../lib/ui/utils", { globals, requires: utilsRequires })
