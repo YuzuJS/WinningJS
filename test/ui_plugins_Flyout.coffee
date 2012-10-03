@@ -61,7 +61,7 @@ describe "Using the Flyout presenter plugin", ->
         $(document.body).empty()
 
     it "should call the flyout's render/show method on click of the element the attribute was found on", (done) ->
-        element = plugin.process(element)
+        plugin.process(element)
 
         button = element.querySelector("button[data-winning-flyout]")
         triggerClickFor(button)
@@ -82,7 +82,7 @@ describe "Using the Flyout presenter plugin", ->
     describe "when the anchor value of the flyout component", ->
         describe "is NOT set", ->
             it "should call show with the current anchor passed and the flyout should exist in DOM", (done) ->
-                element = plugin.process(element)
+                plugin.process(element)
 
                 button = element.querySelector("button[data-winning-flyout]")
                 triggerClickFor(button)
@@ -95,7 +95,7 @@ describe "Using the Flyout presenter plugin", ->
 
         describe "is set", ->
             it "should call show with that anchor", (done) ->
-                element = plugin.process(element)
+                plugin.process(element)
 
                 button = element.querySelector("button[data-winning-flyout]")
                 anchor = document.createElement("a")
@@ -111,7 +111,7 @@ describe "Using the Flyout presenter plugin", ->
 
     describe "when the flyout is hidden", ->
         it "should remove the flyout from the DOM", (done) ->
-            element = plugin.process(element)
+            plugin.process(element)
 
             button = element.querySelector("button[data-winning-flyout]")
             triggerClickFor(button)
