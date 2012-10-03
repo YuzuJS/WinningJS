@@ -194,15 +194,6 @@ describe "Create UI presenter", ->
                 WinJS.UI.setOptions.should.have.been.calledWith(element.querySelector(".a").winControl, { foo: "bar" })
                 WinJS.UI.setOptions.should.have.been.calledWith(element.querySelector("#b").winControl, { baz: "quux" })
 
-    describe "bindViewModel", ->
-        it "should call `ko.applyBindings` with the appropriate arguments", ->
-            presenter = new Presenter(template: -> "<p>Hi</p>")
-
-            newViewModel = { foo: "bar" }
-            presenter.bindViewModel(newViewModel)
-
-            ko.applyBindings.should.have.been.calledWith(newViewModel, presenter.element)
-
     describe "use", ->
         it "should, upon `render`ing, call process on the plugin object passing in the root element", ->
             myPlugin = process: sinon.stub().returns(Q.resolve())
