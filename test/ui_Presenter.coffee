@@ -8,7 +8,7 @@ window = jsdom(null, null, features: QuerySelector: true).createWindow()
 $ = sandboxedModule.require("jquery-browserify", globals: { window })
 
 WinJS = UI: {}, Resources: {}
-ko = {}
+ko = null
 
 s = require("../lib/resources").s
 
@@ -16,12 +16,17 @@ Presenter = do ->
     globals =
         window: window
         document: window.document
+        navigator: window.navigator
         WinJS: WinJS
         MSApp: execUnsafeLocalFunction: (f) -> f()
         Error: Error # necessary for `instanceof Error` checks :-/
+
+    ko = sandboxedModule.require("knockoutify", globals: globals)
+
     utilsRequires =
         "../resources": require("../lib/resources")
         domify: sandboxedModule.require("domify", { globals })
+
     requires =
         knockoutify: ko
         "./utils": sandboxedModule.require("../lib/ui/utils", { globals, requires: utilsRequires })
@@ -40,7 +45,6 @@ describe "Create UI presenter", ->
             return Q.resolve()
         WinJS.UI.setOptions = sinon.spy()
         WinJS.Resources.processAll = sinon.spy()
-        ko.applyBindings = sinon.spy()
 
     it "should result in the object having a `render` and `process` method", ->
         presenter = new Presenter(template: -> "<div></div>")
@@ -72,6 +76,9 @@ describe "Create UI presenter", ->
             presenter.render()
 
         describe "with viewModel", ->
+            beforeEach -> sinon.spy(ko, "applyBindings")
+            afterEach -> ko.applyBindings.restore()
+
             it "should apply Knockout bindings", ->
                 viewModel = name: "My name"
                 presenter = new Presenter(
@@ -125,9 +132,12 @@ describe "Create UI presenter", ->
             describe "that contain Knockout bindings", ->
                 # Nested bindings should not be applied to the presenter element.
                 beforeEach ->
-                    ko.applyBindings = sinon.spy (viewModel, element) ->
+                    sinon.stub(ko, "applyBindings", (viewModel, element) =>
                         if (element.querySelector("strong.sub[data-bind]"))
                             throw new Error("Unable to parse bindings.")
+                    )
+                afterEach ->
+                    ko.applyBindings.restore()
 
                 it "should apply bindings to the renderable's element only", ->
                     viewModel = title: "Composite Component"
@@ -145,6 +155,54 @@ describe "Create UI presenter", ->
 
                     presenter.render()
                     ko.applyBindings.should.not.throw
+
+    describe "refresh", ->
+        beforeEach ->
+            iteration = 0
+            @presenter = new Presenter(
+                template: -> '<div><span data-bind="text: foo" data-iteration="' + iteration++ + '"></span></div>',
+                viewModel: { foo: "FOO" }
+            )
+
+            @doIt = => @presenter.refresh({ foo: "FOO2" })
+
+        describe "when the presenter has been `render`ed", ->
+            beforeEach -> @presenter.render()
+
+            describe "and added to the DOM already", ->
+                beforeEach -> window.document.body.appendChild(@presenter.element)
+
+                it "should be fulfilled with the new element", ->
+                    oldElement = @presenter.element
+
+                    @doIt().then (newElement) =>
+                        newElement.should.equal(@presenter.element)
+                        newElement.should.not.equal(oldElement)
+
+                it "should re-render and re-bind the view model", ->
+                    @doIt().then =>
+                        @presenter.element.querySelector("span").getAttribute("data-iteration").should.equal("1")
+                        @presenter.element.querySelector("span").textContent.should.equal("FOO2")
+
+                it "should re-process the element", ->
+                    @doIt().then =>
+                        WinJS.UI.processAll.should.have.been.calledWith(@presenter.element)
+
+                it "should replace the old element in the DOM with the newly refreshed one", ->
+                    oldElement = @presenter.element
+                    @doIt().then =>
+                        expect($(window.document.body).find(@presenter.element).length).to.equal(1)
+                        expect($(window.document.body).find(oldElement).length).to.equal(0)
+
+            # TODO fix domify so that this works
+            describe.skip "but not added to the DOM", ->
+                it "should reject with an informative error message", ->
+                    @doIt().should.be.rejected.with(/in the DOM/i)
+
+        describe "when the presenter has never been `render`ed", ->
+            it "should reject with an informative error message", ->
+                @doIt().should.be.rejected.with(/in the DOM/i)
+
 
     describe "process", ->
         it "should call `WinJS.Resources.processAll` on the resulting element", ->
