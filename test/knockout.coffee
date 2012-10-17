@@ -10,7 +10,7 @@ Windows = Foundation: Collections: CollectionChange:
     itemRemoved: 2
     itemChanged: 3
 
-{ $, document, ko, koUtils } = do ->
+{ $, document, ko, koUtils, domify } = do ->
     jsdom = require("jsdom").jsdom
     sandboxedModule = require("sandboxed-module")
 
@@ -25,8 +25,9 @@ Windows = Foundation: Collections: CollectionChange:
     ko = sandboxedModule.require("knockoutify", globals: globals)
     koRequires = knockoutify: ko, "jquery-browserify": $
     koUtils = sandboxedModule.require("../lib/knockout", globals: globals, requires: koRequires)
+    domify = sandboxedModule.require("domify", globals: globals)
 
-    return { $, document: window.document, ko, koUtils }
+    return { $, document: window.document, ko, koUtils, domify }
 
 describe "observableArrayFromVector", ->
     { CollectionChange } = Windows.Foundation.Collections
@@ -318,3 +319,169 @@ describe "Knockout custom bindings", ->
             $lis = $(@el).find("li")
             expect($lis).to.have.length(3)
             _.pluck($lis, "textContent").should.deep.equal(["1", "2", "3"])
+
+    describe "winrt", ->
+        { CollectionChange } = Windows.Foundation.Collections
+
+        prepare = (html, viewModel, ee = new EventEmitter()) =>
+            el = domify(html)
+            
+            viewModel.addEventListener = ee.on.bind(ee)
+            trigger = (key) => ee.emit("mapchanged", collectionChange: CollectionChange.itemChanged, key: key)
+            
+            ko.applyBindings(viewModel, el)
+
+            return { el, trigger }
+
+        describe "A single view model property bound to a single binding with a single key", ->
+            beforeEach ->
+                html = """<img data-bind="winrt: { attr: { src: 'thumbnailUrl' } }" />"""
+                @viewModel = { thumbnailUrl: "value" }
+                
+                { @el, @trigger } = prepare(html, @viewModel)
+
+            it "should get the correct initial value", ->
+                @el.src.should.equal("value")
+
+            it "should update when the WinRT view model updates", ->
+                @viewModel.thumbnailUrl = "new-value"
+                @trigger("thumbnailUrl")
+
+                @el.src.should.equal("new-value")
+
+        describe "A single view model property bound to a single binding with multiple keys", ->
+            beforeEach ->
+                html = """<img data-bind="winrt: { attr: { src: 'thumbnailUrl', title: 'thumbnailUrl' } }" />"""
+                @viewModel = { thumbnailUrl: "value" }
+                
+                { @el, @trigger } = prepare(html, @viewModel)
+
+            it "should get the correct initial values", ->
+                @el.src.should.equal("value")
+                @el.getAttribute("title").should.equal("value")
+
+            it "should update when the WinRT view model updates", ->
+                @viewModel.thumbnailUrl = "new-value"
+                @trigger("thumbnailUrl")
+
+                @el.src.should.equal("new-value")
+                @el.getAttribute("title").should.equal("new-value")
+
+        describe "A single view model property bound to multiple bindings each with a single key", ->
+            beforeEach ->
+                html = """<img data-bind="winrt: { attr: { src: 'color' }, style: { borderColor: 'color' } }" />"""
+                @viewModel = { color: "value" }
+                
+                { @el, @trigger } = prepare(html, @viewModel)
+
+            it "should get the correct initial values", ->
+                @el.src.should.equal("value")
+                @el.style.borderColor.should.equal("value")
+
+            it "should update when the WinRT view model updates", ->
+                @viewModel.color = "new-value"
+                @trigger("color")
+
+                @el.src.should.equal("new-value")
+                @el.style.borderColor.should.equal("new-value")
+
+        describe "Multiple view model properties bound to multiple bindings each with a single key", ->
+            beforeEach ->
+                html = """
+                       <img data-bind="winrt: { attr: { src: 'thumbnailUrl' }, style: { borderColor: 'color' } }" />
+                       """
+                @viewModel = { thumbnailUrl: "value", color: "value" }
+
+                { @el, @trigger } = prepare(html, @viewModel)
+
+            it "should give both of them the correct initial value", ->
+                @el.style.borderColor.should.equal("value")
+                @el.src.should.equal("value")
+
+            it "should update both when the WinRT view model updates", ->
+                @viewModel.thumbnailUrl = "new-thumbnailUrl-value"
+                @viewModel.color = "new-borderColor-value"
+                @trigger("thumbnailUrl")
+                @trigger("color")
+
+                @el.style.borderColor.should.equal("new-borderColor-value")
+                @el.src.should.equal("new-thumbnailUrl-value")
+
+        describe "Multiple view model properties bound to a single binding's multiple keys", ->
+            beforeEach ->
+                html = """
+                       <div data-bind="winrt: { style: { borderColor: 'color', backgroundColor: 'background' } }">
+                       </div>
+                       """
+                @viewModel = { color: "value", background: "value" }
+
+                { @el, @trigger } = prepare(html, @viewModel)
+
+            it "should give both of them the correct initial value", ->
+                @el.style.borderColor.should.equal("value")
+                @el.style.backgroundColor.should.equal("value")
+
+            it "should update both when the WinRT view model updates", ->
+                @viewModel.color = "new-borderColor-value"
+                @viewModel.background = "new-background-value"
+                @trigger("color")
+                @trigger("background")
+
+                @el.style.borderColor.should.equal("new-borderColor-value")
+                @el.style.backgroundColor.should.equal("new-background-value")
+
+        describe "Multiple observables with multiple bindings with multiple keys", ->
+            beforeEach ->
+                ee = new EventEmitter()
+                html = """
+                       <div><!-- ko foreach: pages -->
+                           <img data-bind="winrt: { attr: {src: 'thumbnailUrl' },
+                           style: { borderColor: 'color', backgroundColor: 'background', color: 'color' } }"/>
+                       <!-- /ko --></div>
+                       """
+                
+                @page1 = { thumbnailUrl: "url1", color: "color1", background: "bg1", addEventListener: ee.on.bind(ee) }
+                @page2 = { thumbnailUrl: "url2", color: "color2", background: "bg2", addEventListener: ee.on.bind(ee) }
+                @pages = [@page1, @page2]
+                @viewModel = pages: @pages
+                
+                { @el, @trigger } = prepare(html, @viewModel, ee)
+
+                @img1 = $(@el).children().first()[0]
+                @img2 = $(@el).children().last()[0]
+
+            it "everything has the correct initial value", ->
+                @img1.src.should.equal("url1")
+                @img2.src.should.equal("url2")
+
+                @img1.style.color.should.equal("color1")
+                @img2.style.color.should.equal("color2")
+
+                @img1.style.borderColor.should.equal("color1")
+                @img2.style.borderColor.should.equal("color2")
+
+                @img1.style.backgroundColor.should.equal("bg1")
+                @img2.style.backgroundColor.should.equal("bg2")
+
+            it "everything updates when the WinRT view model updates", ->
+                @page1.thumbnailUrl = "new-url1"
+                @page2.thumbnailUrl = "new-url2"
+                @page1.color = "new-color1"
+                @page2.color = "new-color2"
+                @page1.background = "new-bg1"
+                @page2.background = "new-bg2"
+                @trigger("thumbnailUrl")
+                @trigger("color")
+                @trigger("background")
+                
+                @img1.src.should.equal("new-url1")
+                @img2.src.should.equal("new-url2")
+
+                @img1.style.color.should.equal("new-color1")
+                @img2.style.color.should.equal("new-color2")
+
+                @img1.style.borderColor.should.equal("new-color1")
+                @img2.style.borderColor.should.equal("new-color2")
+
+                @img1.style.backgroundColor.should.equal("new-bg1")
+                @img2.style.backgroundColor.should.equal("new-bg2")
