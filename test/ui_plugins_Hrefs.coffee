@@ -23,9 +23,15 @@ describe "Using the ButtonHrefs presenter plugin", ->
 
         document.body.innerHTML = '''
                                   <button id="x" data-winning-href="#/test">Test</button>
+                                  <div id="y" data-winning-href="#/test-div">Test Div</div>
                                   '''
 
     it "should react to clicks on button elements with data-winning-href attributes by navigating there", ->
         $("#x").click()
 
         document.location.href.should.equal("#/test")
+
+    it "should react to clicks on div elements with data-winning-href attributes by navigating there", ->
+        $("#y").click()
+
+        document.location.href.should.equal("#/test-div")
