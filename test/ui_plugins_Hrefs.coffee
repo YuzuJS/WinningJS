@@ -15,7 +15,7 @@ describe "Using the ButtonHrefs presenter plugin", ->
         $ = sandboxedModule.require("jquery-browserify", globals: globals)
 
         ButtonHrefsPlugin = sandboxedModule.require(
-            "../lib/ui/plugins/ButtonHrefs"
+            "../lib/ui/plugins/Hrefs"
             globals: globals
             requires: { "jquery-browserify": $ }
         )
