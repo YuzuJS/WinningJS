@@ -10,7 +10,8 @@ Windows = Foundation: Collections: CollectionChange:
     itemRemoved: 2
     itemChanged: 3
 
-{ $, document, ko, koUtils, domify } = do ->
+{ $, document, ko, koUtils, domify, s } = do ->
+
     jsdom = require("jsdom").jsdom
     sandboxedModule = require("sandboxed-module")
 
@@ -21,13 +22,18 @@ Windows = Foundation: Collections: CollectionChange:
         navigator: window.navigator
         Windows: Windows
 
+    s = sinon.stub()
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
     ko = sandboxedModule.require("knockoutify", globals: globals)
-    koRequires = knockoutify: ko, "jquery-browserify": $
+    koRequires = knockoutify: ko, "jquery-browserify": $, "./resources": { s: s }
+
     koUtils = sandboxedModule.require("../lib/knockout", globals: globals, requires: koRequires)
     domify = sandboxedModule.require("domify", globals: globals)
 
-    return { $, document: window.document, ko, koUtils, domify }
+    return { $, document: window.document, ko, koUtils, domify, koRequires, s }
+
+afterEach ->
+    s.reset()
 
 describe "observableArrayFromVector", ->
     { CollectionChange } = Windows.Foundation.Collections
@@ -263,6 +269,33 @@ describe "Knockout custom bindings", ->
         it "should not set a class if the bounded method returns a falsy value", ->
             @status("")
             @$el[0].hasAttribute("class").should.be.false
+
+    describe "winControlLabelKey", ->
+        beforeEach ->
+            @$labelEl = $('<span class="win-label"></span>')
+            @$el = $('<div data-bind="winControlLabelKey: getLabelText"></div>')
+            @label = ko.observable("labels/Key")
+            @viewModel = getLabelText: ko.computed(=> @label())
+            @labelText = ko.computed(=> @label() + " Text")
+
+            s.returns(@labelText())
+
+        describe "with an element that has not been processed", ->
+            beforeEach ->
+                ko.applyBindings(@viewModel, @$el[0])
+
+            it "when the winshould set an attribute named `data-win-res` with label", ->
+                @$el.attr("data-win-res").should.equal("{ winControl: { label: '" + @label() + "' } }")
+
+        describe "with a processed win control", ->
+            beforeEach ->
+                @$el[0].winControl = {}
+                @$el.append(@$labelEl)
+                ko.applyBindings(@viewModel, @$el[0])
+
+            it "should set the text content of the nested label element", ->
+                s.should.have.been.calledWith(@label())
+                @$labelEl[0].textContent.should.equal(@labelText())
 
     describe "component", ->
         beforeEach ->
