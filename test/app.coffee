@@ -1,5 +1,6 @@
 "use strict"
 
+_ = require("underscore")
 sandboxedModule = require("sandboxed-module")
 EventEmitter = require("events").EventEmitter
 
@@ -7,6 +8,7 @@ Windows =
     ApplicationModel: Activation:
         ActivationKind: launch: {}
         ApplicationExecutionState: terminated: {}
+    UI: WebUI: WebUIApplication: {}
 
 requireApp = (WinJS = {}, patches = {}) ->
     WinJS.Application ?= start: ->
@@ -17,9 +19,13 @@ requireApp = (WinJS = {}, patches = {}) ->
     WinJS.Application.addEventListener = applicationEE.on.bind(applicationEE)
     WinJS.Application.dispatchEvent = applicationEE.emit.bind(applicationEE)
 
+    webUIEE = new EventEmitter()
+    Windows.UI.WebUI.WebUIApplication.addEventListener = webUIEE.on.bind(webUIEE)
+    Windows.UI.WebUI.WebUIApplication.dispatchEvent = webUIEE.emit.bind(webUIEE)
+
     sandboxedModule.require(
         "../lib/app"
-        globals: { WinJS, Windows }
+        globals: { WinJS: WinJS, Windows: Windows }
         requires: { "./patches": patches }
     )
 
@@ -75,33 +81,30 @@ describe "app", ->
 
                 spy.should.have.been.calledWith(@args)
 
-        describe "when the previous execution state is 'terminated'", ->
-            beforeEach ->
-                @args.detail.previousExecutionState =
-                    Windows.ApplicationModel.Activation.ApplicationExecutionState.terminated
-
-            it "should publish a 'reactivate' event", ->
-                stubWinJS = {}
-                app = requireApp(stubWinJS)
-                app.start()
-
-                spy = sinon.spy()
-                app.on("reactivate", spy)
-
-                stubWinJS.Application.dispatchEvent("activated", @args)
-
-                spy.should.have.been.calledWith(@args)
-
     describe "when the 'checkpoint' event is triggered", ->
-        it "should publish a 'beforeSuspend' event", ->
+        it "should publish a 'suspend' event", ->
             stubWinJS = {}
             app = requireApp(stubWinJS)
             app.start()
 
             spy = sinon.spy()
-            app.on("beforeSuspend", spy)
+            app.on("suspend", spy)
 
             eventObject = {}
             stubWinJS.Application.dispatchEvent("checkpoint", eventObject)
+
+            spy.should.have.been.calledWith(eventObject)
+
+    describe "when the 'resuming' event is triggered", ->
+        it "should publish a 'resume' event", ->
+            stubWinJS = {}
+            app = requireApp(stubWinJS)
+            app.start()
+
+            spy = sinon.spy()
+            app.on("resume", spy)
+
+            eventObject = {}
+            Windows.UI.WebUI.WebUIApplication.dispatchEvent("resuming", eventObject)
 
             spy.should.have.been.calledWith(eventObject)
