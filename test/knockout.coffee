@@ -229,6 +229,23 @@ describe "observableFromMapItem", ->
 
         observable().should.equal("value")
 
+describe "twoWayObservableFromMapItem", ->
+    { CollectionChange } = Windows.Foundation.Collections
+
+    beforeEach ->
+        ee = new EventEmitter()
+        @map = { key: "value" }
+
+        @map.addEventListener = ee.on.bind(ee)
+        @trigger = (args...) => ee.emit("mapchanged", args...)
+
+    it "should automatically update the map item when the observable's value has changed", ->
+        observable = koUtils.twoWayObservableFromMapItem(@map, "key")
+
+        observable("new-value")
+
+        @map.key.should.equal("new-value")
+
 describe "Knockout custom bindings", ->
     beforeEach -> koUtils.addBindings()
 
