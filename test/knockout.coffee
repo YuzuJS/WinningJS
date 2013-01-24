@@ -9,6 +9,9 @@ Windows = Foundation: Collections: CollectionChange:
     itemInserted: 1
     itemRemoved: 2
     itemChanged: 3
+    
+gesture = { target: null, addPointer: sinon.stub() }
+MSGesture = -> gesture
 
 { $, document, ko, koUtils, domify, s } = do ->
 
@@ -21,6 +24,7 @@ Windows = Foundation: Collections: CollectionChange:
         document: window.document
         navigator: window.navigator
         Windows: Windows
+        MSGesture: MSGesture
 
     s = sinon.stub()
     $ = sandboxedModule.require("jquery-browserify", globals: globals)
@@ -343,6 +347,46 @@ describe "Knockout custom bindings", ->
                     some data from a different rendering process
                 """
             )
+
+    describe "gesture", ->
+        beforeEach ->
+            @el = $('<div data-bind="gesture: { PointerEventA: handlerA, PointerEventB: handlerB }">Test</div>')[0]
+            @viewModel = handlerA: sinon.stub(), handlerB: sinon.stub()
+            @addEventListenerSpy = sinon.spy(@el, "addEventListener")
+            ko.applyBindings(@viewModel, @el)
+
+        afterEach ->
+            gesture.target = null
+
+        it "should listen to all pointer events configured inside the gesture options", ->
+            @addEventListenerSpy.should.have.been.calledWith("PointerEventA")
+            @addEventListenerSpy.should.have.been.calledWith("PointerEventB")
+
+        describe "when an event for MSPointerDown is not provided", ->
+            beforeEach ->
+                @evt = document.createEvent("MSPointerDown")
+                @evt._type = "MSPointerDown" # Needed for dispatchEvent to call our handlers. Don't ask!
+                @evt.pointerId = "ABC"
+                @el.dispatchEvent(@evt)
+
+            it "should add a listener for MSPointerDown when not provided", ->
+                @addEventListenerSpy.should.have.been.calledWith("MSPointerDown")
+
+            it "should call addPointer on the gesture with the pointer id of the event", ->
+                gesture.addPointer.should.have.been.calledWith("ABC")
+
+        describe "when a gesture event is fired", ->
+            beforeEach ->
+                @evt = document.createEvent("PointerEventA")
+                @evt._type = "PointerEventA" # Same crap as above.
+                @el.dispatchEvent(@evt)
+
+            it "should set the target property off the gesture to the element", ->
+                gesture.target = @el
+
+            it "should invoke handler passing in event and gesture", ->
+                @viewModel.handlerA.should.have.been.calledWith(@evt, gesture)
+
 
     describe "voreach", ->
         beforeEach ->
