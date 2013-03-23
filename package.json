@@ -1,11 +1,12 @@
 {
     "name": "WinningJS",
     "description": "A set of modules for Windows 8 development, built on top of WinJS.",
-    "version": "0.0.0-3",
+    "version": "0.0.0-4",
     "author": "NobleJS",
     "contributors": [
         "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)",
         "Paul Bouzakis <github@paulbouzakis.com> (http://paulbouzakis.com/)",
+        "Donavon West <github@donavon.com> (http://donavon.com/)",
         "Joseph Khoury"
     ],
     "repository": {
