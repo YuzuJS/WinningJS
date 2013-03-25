@@ -4,15 +4,24 @@ _ = require("underscore")
 sandboxedModule = require("sandboxed-module")
 EventEmitter = require("events").EventEmitter
 
+settingsCmd = {}
+
 Windows =
     ApplicationModel: Activation:
         ActivationKind: launch: {}
         ApplicationExecutionState: terminated: {}
-    UI: WebUI: WebUIApplication: {}
+    UI: 
+        WebUI: WebUIApplication: {}
+        ApplicationSettings: SettingsCommand: -> settingsCmd
+
+windowsSettingsCommandSpy =  sinon.spy(Windows.UI.ApplicationSettings, "SettingsCommand")
 
 requireApp = (WinJS = {}, patches = {}) ->
     WinJS.Application ?= start: ->
-    WinJS.UI ?= processAll: ->
+    WinJS.UI ?= 
+        processAll: ->
+        SettingsFlyout: populateSettings: sinon.stub()
+
     WinJS.Binding ?= {}
 
     applicationEE = new EventEmitter()
@@ -108,3 +117,39 @@ describe "app", ->
             Windows.UI.WebUI.WebUIApplication.dispatchEvent("resuming", eventObject)
 
             spy.should.have.been.calledWith(eventObject)
+
+    describe "when the WinJS 'settings' event is triggered", ->
+        beforeEach ->
+            @stubWinJS = {}
+            app = requireApp(@stubWinJS)
+            app.start()
+
+            @spy = sinon.spy()
+            app.on("settings", @spy)
+
+            @eventObject = { detail: e: request: applicationCommands: append: sinon.stub() }
+            @stubWinJS.Application.dispatchEvent("settings", @eventObject)
+
+        it "should publish a 'settings' event", ->
+            @spy.should.have.been.called
+
+        describe "when the app settings is published", ->
+            beforeEach ->
+                @command = @spy.firstCall.args[0]
+
+            it "should pass an object with an `append` method", ->
+                expect(@command).respondTo("append")
+
+            it "should call `populateSettings`", ->
+                @stubWinJS.UI.SettingsFlyout.populateSettings.should.have.been.called
+
+            describe "when the appendCommand function is called back", ->
+                beforeEach ->
+                    @settingsCmd = @command.append("foo", "bar", "jack")
+
+                it "creates a `SettingsCommand` object", ->
+                    windowsSettingsCommandSpy.should.have.been.calledWith("foo", "bar", "jack")
+
+                it "append the `SettingsCommand` object to `applicationCommands`", ->
+                    @eventObject.detail.e.request.applicationCommands
+                        .append.should.have.been.calledWith(settingsCmd);
