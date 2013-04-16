@@ -3,7 +3,7 @@
 jsdom = require("jsdom").jsdom
 Q = require("q")
 sandboxedModule = require("sandboxed-module")
-makeEmitter = require("pubit").makeEmitter
+makeEmitter = require("pubit-as-promised").makeEmitter
 
 window = jsdom(null, null, features: QuerySelector: true).createWindow()
 document = window.document
