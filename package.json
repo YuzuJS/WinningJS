@@ -1,7 +1,7 @@
 {
     "name": "WinningJS",
     "description": "A set of modules for Windows 8 development, built on top of WinJS.",
-    "version": "0.0.0-2",
+    "version": "0.0.0-3",
     "author": "NobleJS",
     "contributors": [
         "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)",
@@ -26,7 +26,7 @@
         "domify": ">= 0.1.0",
         "jquery-browserify": ">= 1.8.1",
         "knockoutify": "git://github.com/domenic/knockoutify.git",
-        "pubit": ">= 1.2.1",
+        "pubit-as-promised": ">= 1.0.0",
         "q": ">= 0.8.10",
         "underscore": ">= 1.4.0",
         "underscore.string": ">= 2.3.0"
