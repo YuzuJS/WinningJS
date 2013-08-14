@@ -23,11 +23,11 @@
         "lint": "jshint lib"
     },
     "dependencies": {
-        "domify": ">= 0.1.0",
-        "jquery-browserify": ">= 1.8.1",
-        "knockoutify": "git://github.com/domenic/knockoutify.git",
+        "domify": "~1.0.0",
+        "jquery2": "~2.0.3-a",
+        "knockout": "~2.3.0",
         "pubit-as-promised": ">= 1.0.0",
-        "q": ">= 0.8.10",
+        "q": "~0.9.6",
         "underscore": ">= 1.4.0",
         "underscore.string": ">= 2.3.0"
     },
